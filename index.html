@@ -318,7 +318,7 @@ const PX=250,PY=74;
 function drawWork(dt){const sd=J.sides[J.cur],stg=J.stage,mode=stg==='blast'?'erase':'coat',kind=stg==='blast'?'blast':'spray';
  const nozR=(stg==='blast'?17:24)*(save.up.nozzle&&stg==='blast'?1.35:1),press=save.up.comp?1:0;
  const pickNeeded=stg==='paint'&&!J.color;
- let active=pointer.down&&!sd.done&&!pickNeeded&&J.flip===0;let tx=pointer.x,ty=pointer.y-(pointer.touch?46:0);
+ let active=pointer.down&&!sd.done&&!pickNeeded&&J.flip===0;let tx=pointer.x,ty=pointer.y-(pointer.touch?95:0);
  if(active){const lx=tx-PX,ly=ty-PY;const rate=stg==='blast'?5.5*J.media.spd*(save.up.comp?1.5:1):6.5;const a=clamp(rate*dt,0,.5);
   const L0=J.lastT&&J.lastT.s===sd?J.lastT:{x:lx,y:ly},dd=Math.hypot(lx-L0.x,ly-L0.y),n=Math.min(30,Math.max(1,Math.ceil(dd/(nozR*.35))));let hit=0;
   for(let k=1;k<=n;k++){const q=k/n;hit+=applyTool(sd,L0.x+(lx-L0.x)*q+(Math.random()-.5)*5,L0.y+(ly-L0.y)*q+(Math.random()-.5)*5,nozR,clamp(a*Math.max(1,n*.5)/n,0,.5),mode)}J.lastT={x:lx,y:ly,s:sd};
