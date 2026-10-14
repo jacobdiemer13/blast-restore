@@ -25,7 +25,7 @@ const mk=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,Mat
 const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 // ---------- save ----------
 const SK='blastrestore_v1';
-let save={cash:0,stars:[0,0,0],up:{nozzle:false,comp:false}};
+let save={cash:0,stars:[0,0,0],up:{nozzle:false,comp:false},garage:{},sets:{},daily:{last:'',streak:0},endless:0,restored:0};
 try{const s=JSON.parse(localStorage.getItem(SK));if(s)save=Object.assign(save,s)}catch(e){}
 const persist=()=>{try{localStorage.setItem(SK,JSON.stringify(save))}catch(e){}};
 // ---------- noise ----------
@@ -168,7 +168,7 @@ const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 const G={scr:'title',t:0};let job=null,J=null,buttons=[],toastT=0,toastS='',pointer={x:600,y:300,down:false,touch:false,seen:false},shake=0;
 let titleSide=null,thumbs={};
 function toast(s){toastS=s;toastT=2.2}
-function startJob(i){job=JOBS[i];G.scr='loading';G.loadT=0;setTimeout(()=>{J={i,sides:[],cur:0,flip:0,stage:'media',media:null,time:0,color:null,dmg:false,slider:.5,rev:0};
+function startJob(i,jv,kind){job=jv||JOBS[i];G.scr='loading';G.loadT=0;setTimeout(()=>{J={i,kind:kind||'career',sides:[],cur:0,flip:0,stage:'media',media:null,time:0,color:null,dmg:false,slider:.5,rev:0};
  for(let s=0;s<job.sides;s++){const sd=genSide(job,s,RES);compose(sd,'blast',0);J.sides.push(sd)}
  J.before=mk(J.sides[0].w,J.sides[0].h);J.before.getContext('2d').drawImage(J.sides[0].comp,0,0);G.scr='brief'},40)}
 function chooseMedia(m){J.media=MEDIA.find(x=>x.id===m);J.dmg=job.damage.includes(m);if(J.dmg)for(const sd of J.sides)genMetal(job,sd,true);J.stage='blast';J.sides.forEach(sd=>{resetMask(sd,'erase')});G.scr='work';click()}
@@ -177,7 +177,10 @@ function nextStage(){click();if(J.stage==='blast'){J.stage='prime';J.sides.forEa
 function pickColor(c){J.color=c;J.sides.forEach(sd=>{genPaint(sd,c[1]);resetMask(sd,'coat')});click()}
 function finishJob(){let st=3;const notes=[];if(J.dmg){st--;notes.push('−1★ '+job.damageMsg)}if(J.time>job.par){st--;notes.push(`−1★ Blast time ${J.time.toFixed(0)}s (par ${job.par}s)`)}else notes.push(`Blast time ${J.time.toFixed(0)}s, under par!`);
  if(J.media.id===job.best&&!J.dmg)notes.push('Perfect media choice');st=Math.max(1,st);const pay=Math.round(job.pay*[.5,.75,1][st-1]+(st===3?job.pay*.15:0));
- J.res={st,pay,notes};save.cash+=pay;save.stars[J.i]=Math.max(save.stars[J.i],st);persist();G.scr='results';G.resT=0;cash();buzz([20,40,20])}
+ let p2=pay;if(J.kind==='daily'){const t=dayKey(),y=dayKey(-1);save.daily.streak=save.daily.last===y?save.daily.streak+1:save.daily.last===t?save.daily.streak:1;save.daily.last=t;const sb=Math.min(save.daily.streak,7)*.1;const b=Math.round(pay*sb);if(b){p2+=b;notes.push(`🔥 ${save.daily.streak}-day streak bonus +$${b}`)}else notes.push('Daily streak started. Come back tomorrow!')}
+ if(J.kind==='endless')save.endless++;if(J.kind==='career')save.stars[J.i]=Math.max(save.stars[J.i],st);
+ const isNew=!save.garage[job.id];save.garage[job.id]={seed:job.seed,oldPaint:job.oldPaint,color:J.color,dmg:J.dmg};save.restored++;if(isNew)notes.push('New part added to your Garage!');
+ J.res={st,pay:p2,notes};save.cash+=p2;persist();G.scr='results';G.resT=0;cash();buzz([20,40,20])}
 // ---------- input ----------
 function lp(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
 cv.addEventListener('pointerdown',e=>{initAudio();if(AC&&AC.state==='suspended')AC.resume();const p=lp(e);pointer.touch=e.pointerType==='touch';pointer.seen=true;
@@ -221,16 +224,73 @@ function drawTitle(dt){ctx.drawImage(BG,0,0,W,H);if(!titleSide){titleSide=genSid
  ctx.font='900 62px Impact,Haettenschweiler,"Arial Black",system-ui';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=g;ctx.fillText('BLAST',36,112);ctx.font='900 46px Impact,"Arial Black",system-ui';ctx.fillText('& RESTORE',36,162);ctx.restore();
  ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1;ctx.font='900 62px Impact,"Arial Black",system-ui';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.strokeText('BLAST',36,112);
  ctx.fillStyle='#ff8a1f';ctx.fillRect(38,180,250,3);text('SANDBLASTING  SIM',40,200,18,'#ff9a3a','left',800);
- button(40,250,170,52,'▶  PLAY',()=>{G.scr='map'},{sz:20,pulse:true});text('Tap to start',42,322,12,'rgba(255,255,255,.45)','left',500)}
-function thumb(i){if(!thumbs[i]){const sd=genSide(JOBS[i],0,.6);compose(sd,'blast',0);thumbs[i]=sd}return thumbs[i]}
-function drawMap(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,W,H);text('JOB BOARD',24,26,22,'#fff','left',900);text('Pick a job. Blast it. Make it new.',178,27,13,'#aab','left',500);cashPill();
- button(W-262,10,100,30,'🛠 Shop',()=>{G.scr='shop'},{col:['#4a5563','#2d343d'],sz:13});button(W-334,10,64,30,'Title',()=>{G.scr='title'},{col:['#4a5563','#2d343d'],sz:12});
- JOBS.forEach((j,i)=>{const x=28+i*262,y=60,w=246,h=322,lock=i>0&&!save.stars[i-1];panel(x,y,w,h,.82);
-  const t=thumb(i);ctx.save();rr(x+10,y+10,w-20,150,8);ctx.clip();const g=ctx.createRadialGradient(x+w/2,y+80,10,x+w/2,y+80,150);g.addColorStop(0,'#3d434b');g.addColorStop(1,'#15181c');ctx.fillStyle=g;ctx.fillRect(x+10,y+10,w-20,150);ctx.drawImage(t.comp,x+w/2-110,y+11,220,150);ctx.restore();
-  if(lock){ctx.fillStyle='rgba(0,0,0,.6)';rr(x+10,y+10,w-20,150,8);ctx.fill();text('🔒',x+w/2,y+84,34,'#fff','center')}
-  text(`JOB ${i+1}`,x+14,y+178,11,'#ff9a3a','left',800);text(j.name,x+14,y+198,17,'#fff','left',800);text(`${j.cust}, ${j.role}`,x+14,y+219,12,'#9aa3ad','left',500);text(j.mat,x+14,y+237,12,'#9aa3ad','left',500);
-  text('$'+j.pay,x+w-14,y+180,18,'#7ee08a','right',900);stars(x+14,y+262,save.stars[i],16);
-  button(x+w-112,y+h-48,98,36,lock?'Locked':save.stars[i]?'Redo':'Start',()=>startJob(i),{dis:lock,sz:14})})}
+ button(40,236,170,50,'▶  PLAY',()=>{G.scr='map'},{sz:20,pulse:true});button(40,296,170,38,'🏁 Garage',()=>{G.scr='garage'},{col:['#4a5563','#2d343d'],sz:15});text('Tap to start',42,350,12,'rgba(255,255,255,.45)','left',500)}
+function dayKey(off=0){const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+const OLDPAL=[[34,86,150],[150,30,28],[40,92,52],[196,160,40],[92,92,98],[120,60,110],null];
+function variant(base,seed,o){hs=seed*7919+13;hr();const v=Object.assign({},base,{seed:40+(seed%911)},o);if(base.metal!=='alu')v.oldPaint=OLDPAL[(hr()*OLDPAL.length)|0];return v}
+const CUST=[['Marge','antique dealer'],['Tony','hot rod guy'],['Wes','farm mechanic'],['Lena','vintage collector'],['Hank','scrapyard owner'],['Priya','bike restorer']];
+function dailyJob(){const k=dayKey(),n=+k.replace(/-/g,'');hs=n;hr();const i=(hr()*3)|0,c=CUST[(hr()*CUST.length)|0];return{i,v:variant(JOBS[i],n,{name:'Daily: '+JOBS[i].name,cust:c[0],role:c[1],pay:Math.round(JOBS[i].pay*1.6),quote:"Today only. I need this one turned around fast and I'm paying extra for it."})}}
+function endlessJob(){const seed=(Date.now()%100000)+save.endless*131;hs=seed;hr();const i=(hr()*3)|0,c=CUST[(hr()*CUST.length)|0],lv=save.endless+1;
+ return{i,v:variant(JOBS[i],seed,{name:`#${lv} ${JOBS[i].name}`,cust:c[0],role:c[1],pay:Math.round(JOBS[i].pay*(1+lv*.08)),par:Math.max(14,Math.round(JOBS[i].par*(1-Math.min(.35,lv*.02)))),quote:'Found this rough one. Blast it, coat it, and make me proud.'})}}
+const careerDone=()=>save.stars.every(x=>x>0);
+function countdown(){const d=new Date(),m=new Date(d);m.setHours(24,0,0,0);const t=Math.max(0,(m-d)/1000|0);return[t/3600|0,(t/60|0)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':')}
+const thumbC={};function thumbV(key,jb){if(!thumbC[key]){const sd=genSide(jb,0,.6);compose(sd,'blast',0);thumbC[key]=sd}return thumbC[key]}
+function thumb(i){return thumbV('c'+i,JOBS[i])}
+function drawMap(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,W,H);text('JOB BOARD',24,26,22,'#fff','left',900);cashPill();
+ button(W-262,10,100,30,'🛠 Shop',()=>{G.scr='shop'},{col:['#4a5563','#2d343d'],sz:13});button(W-372,10,104,30,'🏁 Garage',()=>{G.scr='garage'},{col:['#4a5563','#2d343d'],sz:13});button(W-436,10,58,30,'Title',()=>{G.scr='title'},{col:['#4a5563','#2d343d'],sz:12});
+ JOBS.forEach((j,i)=>{const x=28+i*262,y=50,w=246,h=238,lock=i>0&&!save.stars[i-1];panel(x,y,w,h,.82);
+  const t=thumb(i);ctx.save();rr(x+10,y+8,w-20,112,8);ctx.clip();const g=ctx.createRadialGradient(x+w/2,y+64,10,x+w/2,y+64,140);g.addColorStop(0,'#3d434b');g.addColorStop(1,'#15181c');ctx.fillStyle=g;ctx.fillRect(x+10,y+8,w-20,112);ctx.drawImage(t.comp,x+w/2-82,y+9,164,112);ctx.restore();
+  if(lock){ctx.fillStyle='rgba(0,0,0,.6)';rr(x+10,y+8,w-20,112,8);ctx.fill();text('🔒',x+w/2,y+64,30,'#fff','center')}
+  text(`JOB ${i+1}`,x+14,y+136,11,'#ff9a3a','left',800);text(j.name,x+14,y+156,16,'#fff','left',800);text(`${j.cust}, ${j.role}`,x+14,y+176,12,'#9aa3ad','left',500);
+  text('$'+j.pay,x+w-14,y+137,17,'#7ee08a','right',900);stars(x+14,y+212,save.stars[i],15);
+  button(x+w-104,y+h-44,90,32,lock?'Locked':save.stars[i]?'Redo':'Start',()=>startJob(i),{dis:lock,sz:13})});
+ // daily
+ const dj=dailyJob(),done=save.daily.last===dayKey(),live=save.daily.last===dayKey(-1)||done,stk=live?save.daily.streak:0;
+ const x=28,y=298,w=508,h=92;panel(x,y,w,h,.88);ctx.save();ctx.shadowColor='rgba(255,170,40,.5)';ctx.shadowBlur=done?0:14;rr(x+.5,y+.5,w-1,h-1,10);ctx.strokeStyle=done?'rgba(255,255,255,.1)':'rgba(255,170,40,.75)';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+ const t=thumbV('d'+dayKey(),dj.v);ctx.save();rr(x+8,y+8,112,76,8);ctx.clip();ctx.fillStyle='#16191d';ctx.fillRect(x+8,y+8,112,76);ctx.drawImage(t.comp,x+8,y+8,112,77);ctx.restore();
+ text('DAILY JOB',x+132,y+18,11,'#ffb347','left',900);text(dj.v.name.replace('Daily: ',''),x+132,y+38,16,'#fff','left',800);text(`Pays $${dj.v.pay} + streak bonus`,x+132,y+58,12,'#7ee08a','left',700);
+ text(`🔥 Streak: ${stk} day${stk===1?'':'s'}`+(stk?`  (+${Math.min(stk+(done?0:1),7)*10}%)`:''),x+132,y+77,12,'#ffcf8a','left',700);
+ if(done){panel(x+w-150,y+20,136,52,.9);text('Done today ✓',x+w-82,y+36,12,'#3fbf5a','center',800);text('Next in '+countdown(),x+w-82,y+56,12,'#ccd','center',700)}
+ else button(x+w-130,y+26,116,40,'Start daily',()=>startJob(dj.i,dj.v,'daily'),{pulse:true,sz:14});
+ // endless
+ const ex=552,ok=careerDone();panel(ex,y,240,h,.88);text('ENDLESS',ex+14,y+18,11,'#8fc8ff','left',900);text('Random Jobs',ex+14,y+38,16,'#fff','left',800);
+ text(ok?`Completed: ${save.endless}`:'Finish all 3 career jobs',ex+14,y+58,12,'#9aa3ad','left',600);text(ok?'Pay rises, par tightens':'to unlock',ex+14,y+76,11,'#778','left',500);
+ button(ex+150,y+30,76,36,ok?'Go ▶':'🔒',()=>{const e=endlessJob();startJob(e.i,e.v,'endless')},{dis:!ok,sz:13,col:['#3a8ee0','#1f5ea8']})}
+// ---------- garage ----------
+const SETS=[{id:'moto',name:'MOTORCYCLE SET',parts:['tank','rim',null,null],future:['Front Fender','Headlight Bucket'],need:['tank','rim'],reward:400,unlock:'Neon shop sign'},
+ {id:'tools',name:'HAND TOOL SET',parts:['wrench',null,null],future:['Socket Set','Ball-Peen Hammer'],need:['wrench'],reward:150,unlock:'Gold tool plaque'}];
+let GBG=null;function genGarageBG(){const S=2,b=mk(W*S,H*S),x=b.getContext('2d');x.scale(S,S);
+ let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#4a3a2c');g.addColorStop(1,'#2a2019');x.fillStyle=g;x.fillRect(0,0,W,H);
+ for(let yy=0;yy<H;yy+=14)for(let xx=(yy/14%2)*7;xx<W;xx+=14){x.fillStyle='rgba(0,0,0,.45)';x.beginPath();x.arc(xx,yy,1.6,0,7);x.fill();x.fillStyle='rgba(255,220,180,.06)';x.beginPath();x.arc(xx+.6,yy+.8,1.6,0,7);x.fill()}
+ for(const sy of [184,344]){g=x.createLinearGradient(0,sy,0,sy+16);g.addColorStop(0,'#c49563');g.addColorStop(.3,'#8f6339');g.addColorStop(1,'#4a2f18');x.fillStyle=g;x.fillRect(16,sy,W-32,14);x.fillStyle='rgba(0,0,0,.45)';x.fillRect(16,sy+14,W-32,8);
+  for(let k=0;k<30;k++){x.strokeStyle=`rgba(60,30,10,${.15+Math.random()*.2})`;x.lineWidth=.6;x.beginPath();const yy=sy+2+Math.random()*10;x.moveTo(16,yy);x.bezierCurveTo(250,yy+Math.random()*2-1,550,yy+Math.random()*2-1,W-16,yy);x.stroke()}
+  for(const bx of [60,W-60]){x.fillStyle='#222';x.fillRect(bx-3,sy+14,6,18)}}
+ x.globalCompositeOperation='lighter';for(let k=0;k<5;k++){const lx=100+k*155;g=x.createRadialGradient(lx,40,4,lx,170,200);g.addColorStop(0,'rgba(255,220,170,.22)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,W,H)}x.globalCompositeOperation='source-over';
+ x.setTransform(1,0,0,1,0,0);const id=x.getImageData(0,0,W*S,H*S),D=id.data;for(let i=0;i<D.length;i+=4){const k=(Math.random()-.5)*14;D[i]+=k;D[i+1]+=k;D[i+2]+=k}x.putImageData(id,0,0);x.scale(S,S);
+ g=x.createRadialGradient(W/2,H/2,H*.35,W/2,H/2,W*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=g;x.fillRect(0,0,W,H);return b}
+const gCache={};function garagePart(id){const e=save.garage[id];if(!e)return null;const key=id+JSON.stringify(e);if(!gCache[key]){const base=JOBS.find(j=>j.id===id),jb=Object.assign({},base,{seed:e.seed,oldPaint:e.oldPaint});const sd=genSide(jb,0,1);if(e.dmg)genMetal(jb,sd,true);genPaint(sd,e.color&&e.color[1]);sd.done=true;compose(sd,'final',1);gCache[key]=sd}return gCache[key]}
+function silhouette(i){const sd=thumb(i);if(!sd.sil){const c=mk(sd.w,sd.h),x=c.getContext('2d');x.fillStyle='rgba(10,8,6,.7)';x.fillRect(0,0,sd.w,sd.h);x.globalCompositeOperation='destination-in';x.drawImage(sd.shape,0,0);sd.sil=c}return sd.sil}
+const setDone=st=>st.need.every(id=>save.garage[id])&&st.parts.every(p=>p===null?false:true);
+const setOwnedReal=st=>st.need.every(id=>save.garage[id]);
+function drawGarage(dt){if(!GBG)GBG=genGarageBG();ctx.drawImage(GBG,0,0,W,H);
+ if(save.sets.moto){ctx.save();const f=.85+.15*Math.sin(G.t*3)*(Math.random()<.03?0:1);ctx.globalAlpha=f;ctx.shadowColor='#ff5a2a';ctx.shadowBlur=22;ctx.font='900 22px Impact,"Arial Black",system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#ffb08a';ctx.lineWidth=2;ctx.strokeText('BLAST & RESTORE',W/2+40,26);ctx.fillStyle='rgba(255,120,80,.35)';ctx.fillText('BLAST & RESTORE',W/2+40,26);ctx.restore()}
+ text('GARAGE',24,26,22,'#fff','left',900);text(`${save.restored} restored`,128,27,12,'#cba','left',600);cashPill();
+ button(W-262,10,100,30,'◀ Jobs',()=>{G.scr='map'},{col:['#4a5563','#2d343d'],sz:13});
+ SETS.forEach((st,r)=>{const sy=r?344:184,ly=sy-128;const own=st.need.filter(id=>save.garage[id]).length,real=setOwnedReal(st),claimed=save.sets[st.id];
+  ctx.save();ctx.fillStyle='rgba(0,0,0,.45)';rr(24,ly-8,250,22,6);ctx.fill();ctx.restore();text(st.name,34,ly+3,12,real?'#ffd36a':'#e8d8c4','left',900);
+  text(`${own}/${st.parts.length} · ${st.future.length} more coming`,170,ly+3,10,'#a99','left',600);
+  if(real){if(!claimed)button(W-210,ly-10,186,26,`Set bonus: claim $${st.reward}`,()=>{save.sets[st.id]=1;save.cash+=st.reward;persist();cash();buzz([20,30,20]);toast(`${st.name} bonus! Unlocked: ${st.unlock}`)},{pulse:true,sz:12,col:['#e8b53a','#a8780e']});
+   else text('★ SET BONUS CLAIMED: '+st.unlock,W-24,ly+3,11,'#ffd36a','right',800)}
+  const slotW=Math.min(190,(W-60)/st.parts.length);let fi=0;
+  st.parts.forEach((id,k)=>{const cx=40+k*slotW+slotW/2,bw=slotW-24,bh=104,bx=cx-bw/2,by=sy-bh-2;
+   if(id){const i=JOBS.findIndex(j=>j.id===id),sd=garagePart(id),sc=Math.min(bw/PW,bh/PH),dw=PW*sc,dh=PH*sc;
+    if(sd){ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(cx,by+bh/2,4,cx,by+bh/2,bw*.7);g.addColorStop(0,'rgba(255,220,170,.16)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(cx-bw,by-20,bw*2,bh+30);ctx.restore();
+     ctx.drawImage(sd.shadow,cx-dw/2-40*sc,by+bh-dh-40*sc+8,(PW+80)*sc,(PH+80)*sc);ctx.drawImage(sd.comp,cx-dw/2,by+bh-dh,dw,dh);
+     const e=save.garage[id];ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-50,sy+2,100,12,3);ctx.fill();text((e.color?e.color[0]:'')+' '+JOBS[i].name.split(' ').pop(),cx,sy+8.5,8,'#e9d6b8','center',700)}
+    else{ctx.drawImage(silhouette(i),cx-dw/2,by+bh-dh,dw,dh);text('?',cx,by+bh-dh/2,26,'rgba(255,255,255,.25)','center',900);ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-50,sy+2,100,12,3);ctx.fill();text('Restore: '+JOBS[i].name.split(' ').pop(),cx,sy+8.5,8,'#a99','center',700)}}
+   else{const nm=st.future[fi++];ctx.save();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(255,230,200,.22)';ctx.lineWidth=1.5;rr(bx+10,by+14,bw-20,bh-16,10);ctx.stroke();ctx.restore();text('🔒',cx,by+bh/2+2,20,'rgba(255,255,255,.5)','center');text(nm,cx,by+bh/2+28,10,'rgba(255,230,200,.45)','center',700);text('COMING SOON',cx,sy+8.5,8,'rgba(255,230,200,.35)','center',800)}})});
+ if(save.sets.tools){ctx.save();const g=ctx.createLinearGradient(0,368,0,392);g.addColorStop(0,'#f6d77a');g.addColorStop(1,'#a4761a');ctx.fillStyle=g;rr(W/2-90,366,180,26,5);ctx.fill();ctx.restore();text('MASTER TOOL RESTORER',W/2,379,11,'#4a3208','center',900)}
+ else text('Restore parts to fill the shelves. Complete a set for a bonus.',W/2,380,12,'rgba(255,230,200,.55)','center',500)}
 function drawShop(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H);text('TOOL SHOP',24,26,22,'#fff','left',900);text('Upgrades are bought with job earnings only.',170,27,13,'#aab','left',500);cashPill();
  button(W-262,10,100,30,'◀ Jobs',()=>{G.scr='map'},{col:['#4a5563','#2d343d'],sz:13});
  const U=[['nozzle','Wide-Bore Boron Nozzle',150,'+35% blast width. Cover more metal every pass.','#9aa'],['comp','185 CFM Tow-Behind Compressor',250,'+50% cutting speed and a deeper roar.','#c84']];
@@ -314,7 +374,7 @@ function drawResults(dt){G.resT+=dt;drawRevealBG();ctx.fillStyle='rgba(0,0,0,.55
  for(let i=0;i<3;i++){const k=clamp((G.resT-.3-i*.25)*4);const sz=34*(k<1?1+.4*Math.sin(k*Math.PI):1);if(k>0)star(350+i*60,150,sz*k,i<r.st);else star(350+i*60,150,17,false);if(k>0&&k<.2&&i<r.st&&!r['s'+i]){r['s'+i]=1;tone(800+i*200,.15,'triangle',.1)}}
  r.notes.forEach((n,i)=>text(n,410,200+i*20,12,n.startsWith('−')?'#ff9a8a':'#9fdca9','center',600));
  text('+ $'+Math.round(r.pay*clamp(G.resT/1.2)),410,272,30,'#7ee08a','center',900);text(`"${r.st===3?'Unreal. Looks better than new.':r.st===2?'Good work, thanks.':'It\u2019ll do, I guess.'}" (${job.cust})`,410,302,12,'#bbc','center',500);
- const nx=J.i<JOBS.length-1;button(240,320,160,40,'Job board',()=>{G.scr='map'},{col:['#4a5563','#2d343d']});button(420,320,160,40,nx?'Next job ▶':'Shop ▶',()=>{nx?startJob(J.i+1):G.scr='shop'},{pulse:true})}
+ const nx=J.kind==='career'&&J.i<JOBS.length-1;button(240,320,160,40,'Job board',()=>{G.scr='map'},{col:['#4a5563','#2d343d']});button(420,320,160,40,nx?'Next job ▶':'Garage ▶',()=>{nx?startJob(J.i+1):G.scr='garage'},{pulse:true})}
 function drawRevealBG(){ctx.drawImage(BG,0,0,W,H);ctx.drawImage(J.sides[0].comp,PX,PY,PW,PH)}
 function drawToast(dt){if(toastT<=0)return;toastT-=dt;const a=clamp(toastT*3);ctx.globalAlpha=a;ctx.font='700 14px system-ui';const w=ctx.measureText(toastS).width+40;panel(W/2-w/2+100,12,w,34,.92);text(toastS,W/2+100,30,14,'#ffd27a','center',700);ctx.globalAlpha=1}
 // ---------- loop ----------
@@ -323,8 +383,8 @@ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;G.t+=dt;butt
  if(G.scr!=='work'&&G.scr!=='title')setHiss(false);
  stepParts(dt);
  switch(G.scr){case'title':drawTitle(dt);break;case'map':drawMap();break;case'shop':drawShop();break;case'loading':drawLoading();break;case'brief':drawBrief();break;case'media':drawMedia();break;
-  case'work':if(J.stage==='reveal')drawReveal(dt);else drawWork(dt);break;case'results':drawResults(dt);break}
+  case'work':if(J.stage==='reveal')drawReveal(dt);else drawWork(dt);break;case'results':drawResults(dt);break;case'garage':drawGarage(dt);break}
  drawToast(dt);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-window.__g={G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
+window.__g={dailyJob,endlessJob,dayKey,G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
 </script></body></html>
