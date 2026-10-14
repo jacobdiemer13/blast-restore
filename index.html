@@ -52,16 +52,16 @@ function tankPath(c){c.beginPath();c.moveTo(24,140);c.bezierCurveTo(26,86,92,56,
 function shapeTank(c,side){c.save();if(side){c.translate(380,0);c.scale(-1,1)}tankPath(c);c.fill();
  c.fillRect(70,200,20,20);c.fillRect(318,160,22,18);c.beginPath();c.ellipse(205,47,27,7,0,0,7);c.fill();c.fillRect(184,40,42,10);c.restore();}
 const JOBS=[
- {id:'wrench',name:'Combination Wrench',cust:'Earl',role:'retired machinist',quote:"This was my dad's 1962 wrench. Sat in a damp barn for thirty years.",pay:60,par:22,metal:'steel',mat:'Forged steel',best:'coarse',damage:[],shape:shapeWrench,hook:[318,104],sides:1,oldPaint:null,seed:3,
+ {id:'wrench',name:'Combination Wrench',cust:'Earl',role:'retired machinist',quote:"This was my dad's 1962 wrench. Sat in a damp barn for thirty years.",pay:60,par:28,metal:'steel',mat:'Forged steel',best:'coarse',damage:[],shape:shapeWrench,hook:[318,104],sides:1,oldPaint:null,seed:3,
   shade(c){c.save();c.translate(190,132);c.rotate(-.12);let g=c.createLinearGradient(0,-46,0,46);g.addColorStop(0,'rgba(255,255,255,.05)');g.addColorStop(.38,'rgba(255,255,255,.30)');g.addColorStop(.5,'rgba(255,255,255,.04)');g.addColorStop(.62,'rgba(0,0,0,.22)');g.addColorStop(1,'rgba(0,0,0,.5)');c.fillStyle=g;c.fillRect(-200,-60,400,120);
    for(const [x,r] of [[-132,42],[130,36]]){g=c.createRadialGradient(x-r*.35,-r*.4,2,x,0,r);g.addColorStop(0,'rgba(255,255,255,.25)');g.addColorStop(.7,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.35)');c.fillStyle=g;c.fillRect(x-r,-r,2*r,2*r)}c.restore()},
   spec(c){c.save();c.translate(190,132);c.rotate(-.12);c.fillStyle='rgba(255,255,255,.9)';c.filter='none';const g=c.createLinearGradient(0,-8,0,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.85)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(-100,-8,200,8);
    for(const [x,r] of [[-132,42],[130,36]]){const q=c.createRadialGradient(x-r*.4,-r*.45,0,x-r*.4,-r*.45,r*.5);q.addColorStop(0,'rgba(255,255,255,.9)');q.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=q;c.fillRect(x-r,-r,2*r,2*r)}c.restore()}},
- {id:'rim',name:'Alloy Wheel Rim',cust:'Dana',role:'weekend autocrosser',quote:"Curb rash, brake dust and fifteen winters of road salt. Make it look factory.",pay:180,par:34,metal:'alu',mat:'Cast aluminum',best:'fine',damage:['coarse'],damageMsg:'Steel grit pitted the soft aluminum!',shape:shapeRim,hook:[190,96],sides:1,oldPaint:[168,170,174],seed:9,
+ {id:'rim',name:'Alloy Wheel Rim',cust:'Dana',role:'weekend autocrosser',quote:"Curb rash, brake dust and fifteen winters of road salt. Make it look factory.",pay:180,par:43,metal:'alu',mat:'Cast aluminum',best:'fine',damage:['coarse'],damageMsg:'Steel grit pitted the soft aluminum!',shape:shapeRim,hook:[190,96],sides:1,oldPaint:[168,170,174],seed:9,
   shade(c){let g=c.createRadialGradient(190,130,0,190,130,122);[[0,'rgba(0,0,0,.5)'],[.16,'rgba(255,255,255,.22)'],[.3,'rgba(0,0,0,.08)'],[.45,'rgba(255,255,255,.06)'],[.78,'rgba(0,0,0,.18)'],[.82,'rgba(0,0,0,.55)'],[.88,'rgba(255,255,255,.3)'],[.95,'rgba(255,255,255,.08)'],[1,'rgba(0,0,0,.55)']].forEach(s=>g.addColorStop(...s));c.fillStyle=g;c.fillRect(0,0,380,260);
    g=c.createLinearGradient(70,10,310,250);g.addColorStop(0,'rgba(255,255,255,.18)');g.addColorStop(.5,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.3)');c.fillStyle=g;c.fillRect(0,0,380,260)},
   spec(c){c.lineCap='round';for(const [r,w,a0,a1,al] of [[112,5,3.5,4.6,.9],[112,4,.5,1.1,.35],[60,3,3.6,4.3,.6],[24,3,3.4,4.4,.7]]){c.strokeStyle=`rgba(255,255,255,${al})`;c.lineWidth=w;c.shadowColor='#fff';c.shadowBlur=6;c.beginPath();c.arc(190,130,r,a0,a1);c.stroke()}c.shadowBlur=0}},
- {id:'tank',name:'Motorcycle Gas Tank',cust:'Rico',role:'café racer builder',quote:"Barn-find '74 tank. Both sides are rough, so don't forget to flip it.",pay:350,par:55,metal:'sheet',mat:'Thin sheet steel',best:'medium',damage:['coarse'],damageMsg:'Coarse grit warped the thin sheet metal!',shape:shapeTank,hook:[205,46],sides:2,oldPaint:[34,86,150],seed:21,
+ {id:'tank',name:'Motorcycle Gas Tank',cust:'Rico',role:'café racer builder',quote:"Barn-find '74 tank. Both sides are rough, so don't forget to flip it.",pay:350,par:69,metal:'sheet',mat:'Thin sheet steel',best:'medium',damage:['coarse'],damageMsg:'Coarse grit warped the thin sheet metal!',shape:shapeTank,hook:[205,46],sides:2,oldPaint:[34,86,150],seed:21,
   shade(c,side){c.save();if(side){c.translate(380,0);c.scale(-1,1)}let g=c.createRadialGradient(165,92,4,190,130,240);g.addColorStop(0,'rgba(255,255,255,.42)');g.addColorStop(.25,'rgba(255,255,255,.12)');g.addColorStop(.5,'rgba(0,0,0,.02)');g.addColorStop(1,'rgba(0,0,0,.6)');c.fillStyle=g;c.fillRect(0,0,380,260);
    g=c.createRadialGradient(262,168,4,262,168,60);g.addColorStop(0,'rgba(0,0,0,.28)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,380,260);
    g=c.createLinearGradient(0,180,0,225);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.45)');c.fillStyle=g;c.fillRect(0,0,380,260);c.restore()},
@@ -111,8 +111,15 @@ function genPaint(sd,rgb){const {w,h}=sd,c=mk(w,h),x=c.getContext('2d');
  if(!rgb){x.drawImage(sd.metal,0,0);x.fillStyle='rgba(255,250,235,.08)';x.fillRect(0,0,w,h)}
  else{x.fillStyle=`rgb(${rgb})`;x.fillRect(0,0,w,h);const id=x.getImageData(0,0,w,h),D=id.data;for(let i=0;i<D.length;i+=4){const k=1+(Math.random()-.5)*.05;D[i]*=k;D[i+1]*=k;D[i+2]*=k}x.putImageData(id,0,0)}
  x.globalCompositeOperation='destination-in';x.drawImage(sd.shape,0,0);sd.paint=c}
-function resetMask(sd,mode){const m=sd.mask.getContext('2d');m.globalCompositeOperation='source-over';m.clearRect(0,0,PW,PH);if(mode==='erase'){m.fillStyle='#fff';m.fillRect(0,0,PW,PH)}sd.grid.fill(mode==='erase'?1:0);sd.cov=0;sd.done=false;sd.fade=0;sd.dirty=true}
-function coverage(sd,mode){let k=0;const g=sd.grid,gi=sd.gin;for(let i=0;i<g.length;i++)if(gi[i]&&(mode==='erase'?g[i]<.12:g[i]>.88))k++;return k/sd.nIn}
+function resetMask(sd,mode){const m=sd.mask.getContext('2d');m.globalCompositeOperation='source-over';m.clearRect(0,0,PW,PH);if(mode==='erase'){m.fillStyle='#fff';m.fillRect(0,0,PW,PH)}sd.grid.fill(mode==='erase'?1:0);sd.clusters=null;sd.cov=0;sd.done=false;sd.fade=0;sd.dirty=true}
+function coverage(sd,mode){const g=sd.grid,gi=sd.gin,C=sd.cols,R=sd.rows,n=g.length,bad=new Uint8Array(n);let clean=0;
+ for(let i=0;i<n;i++)if(gi[i]){if(mode==='erase'?g[i]<=.15:g[i]>=.85)clean++;else bad[i]=1}
+ const seen=new Uint8Array(n),cl=[];let ign=0;
+ for(let i=0;i<n;i++){if(!bad[i]||seen[i])continue;const q=[i];seen[i]=1;for(let h=0;h<q.length;h++){const j=q[h],x=j%C,y=(j/C)|0;for(const k of [x>0?j-1:-1,x<C-1?j+1:-1,y>0?j-C:-1,y<R-1?j+C:-1])if(k>=0&&bad[k]&&!seen[k]){seen[k]=1;q.push(k)}}
+  if(q.length<=2){ign+=q.length;continue}
+  let sx=0,sy=0;for(const j of q){sx+=j%C;sy+=(j/C)|0}sx/=q.length;sy/=q.length;let best=q[0],bd=1e9;for(const j of q){const d=(j%C-sx)**2+(((j/C)|0)-sy)**2;if(d<bd){bd=d;best=j}}
+  const dots=[best];if(q.length>12)for(const j of q){const x=j%C,y=(j/C)|0;if(x%4===0&&y%4===0&&dots.every(d=>Math.abs(d%C-x)+Math.abs(((d/C)|0)-y)>=4))dots.push(j)}cl.push({n:q.length,dots})}
+ sd.clusters=cl;return cl.length?Math.min(.999,(clean+ign)/sd.nIn):1}
 function applyTool(sd,lx,ly,R,a,mode){const m=sd.mask.getContext('2d');m.globalCompositeOperation=mode==='erase'?'destination-out':'source-over';
  const g=m.createRadialGradient(lx,ly,0,lx,ly,R);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(1,'rgba(255,255,255,0)');m.fillStyle=g;m.fillRect(lx-R,ly-R,2*R,2*R);
  const c0=Math.max(0,Math.floor((lx-R)/4)),c1=Math.min(sd.cols-1,Math.floor((lx+R)/4)),r0=Math.max(0,Math.floor((ly-R)/4)),r1=Math.min(sd.rows-1,Math.floor((ly+R)/4));let hit=0;
@@ -316,15 +323,15 @@ function drawMedia(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.55)';c
  text('Tip: match the grit to the metal. Too coarse can ruin soft or thin parts.',W/2,392,12,'rgba(255,255,255,.55)','center',500)}
 const PX=250,PY=74;
 function drawWork(dt){const sd=J.sides[J.cur],stg=J.stage,mode=stg==='blast'?'erase':'coat',kind=stg==='blast'?'blast':'spray';
- const nozR=(stg==='blast'?17:24)*(save.up.nozzle&&stg==='blast'?1.35:1),press=save.up.comp?1:0;
+ const nozR=(stg==='blast'?20:28)*(save.up.nozzle&&stg==='blast'?1.35:1),press=save.up.comp?1:0;
  const pickNeeded=stg==='paint'&&!J.color;
- let active=pointer.down&&!sd.done&&!pickNeeded&&J.flip===0;let tx=pointer.x,ty=pointer.y-(pointer.touch?95:0);
- if(active){const lx=tx-PX,ly=ty-PY;const rate=stg==='blast'?5.5*J.media.spd*(save.up.comp?1.5:1):6.5;const a=clamp(rate*dt,0,.5);
+ let active=pointer.down&&!sd.done&&!pickNeeded&&J.flip===0;let tx=pointer.x,ty=Math.max(PY-10,pointer.y-(pointer.touch?lerp(140,70,clamp((pointer.y-250)/150)):0));
+ if(active){const lx=tx-PX,ly=ty-PY;const rate=stg==='blast'?6.4*J.media.spd*(save.up.comp?1.5:1):7.6;const a=clamp(rate*dt,0,.5);
   const L0=J.lastT&&J.lastT.s===sd?J.lastT:{x:lx,y:ly},dd=Math.hypot(lx-L0.x,ly-L0.y),n=Math.min(30,Math.max(1,Math.ceil(dd/(nozR*.35))));let hit=0;
   for(let k=1;k<=n;k++){const q=k/n;hit+=applyTool(sd,L0.x+(lx-L0.x)*q+(Math.random()-.5)*5,L0.y+(ly-L0.y)*q+(Math.random()-.5)*5,nozR,clamp(a*Math.max(1,n*.5)/n,0,.5),mode)}J.lastT={x:lx,y:ly,s:sd};
   if(stg==='blast'){J.time+=dt;shake=1.3;const dirty=hit>.002;if(dirty){puff(tx,ty,job.metal==='alu'?'rgba(120,108,96,A)':'rgba(150,88,48,A)',3,70,9);if(Math.random()<.5)flake(tx,ty,job.metal==='alu'?'#cfcfc8':(Math.random()<.4&&job.oldPaint?`rgb(${job.oldPaint})`:'#8a4318'))}else puff(tx,ty,'rgba(190,182,170,A)',1,60,8);
    if(Math.random()<.25)buzz(6)}else{if(Math.random()<.6)puff(tx,ty,J.stage==='prime'?'rgba(150,150,150,A)':`rgba(${(J.color[1]||[200,200,200]).join(',')},A)`,1,30,7)}
-  sd.cov=coverage(sd,mode);if(sd.cov>=.95&&!sd.done){sd.done=true;sd.fade=1;ding();buzz(25);
+  sd.cov=coverage(sd,mode);if(sd.cov>=1&&!sd.done){sd.done=true;sd.fade=1;ding();buzz(25);
    const all=J.sides.every(s=>s.done);toast(all?(stg==='blast'?'Blast complete! Bare metal.':stg==='prime'?'Primed and sealed.':'Paint is down. Looking good!'):'This side done. Flip the part!');if(stg==='blast'&&J.dmg&&all)setTimeout(()=>toast(job.damageMsg),1500)}}
  if(!active)J.lastT=null;setHiss(active,kind,press);
  if(sd.fade>0){sd.fade=Math.max(0,sd.fade-dt*2.5);const m=sd.mask.getContext('2d');m.globalCompositeOperation=mode==='erase'?'destination-out':'source-over';m.fillStyle=`rgba(255,255,255,${mode==='erase'?.25:.3})`;m.fillRect(0,0,PW,PH);sd.grid.fill(mode==='erase'?0:1);sd.cov=1;sd.dirty=true}
@@ -334,7 +341,8 @@ function drawWork(dt){const sd=J.sides[J.cur],stg=J.stage,mode=stg==='blast'?'er
  const sh=shake>0?(Math.random()-.5)*shake*2:0;shake=Math.max(0,shake-dt*8);
  ctx.save();ctx.translate(sh,sh*.6);ctx.drawImage(BG,0,0,W,H);hangers(PX,PY);drawPart(J.sides[J.cur],PX,PY,Math.max(.04,sx));
  // missed spots
- if(!sd.done&&sd.cov>.78&&J.flip===0&&!pickNeeded){const p=.35+.35*Math.sin(G.t*7);ctx.strokeStyle=`rgba(255,214,60,${p})`;ctx.lineWidth=1.5;
+ if(!sd.done&&sd.cov>.6&&sd.clusters&&J.flip===0&&!pickNeeded){const p=.55+.35*Math.sin(G.t*7);ctx.lineWidth=2;for(const c of sd.clusters)for(const d of c.dots){const x=PX+(d%sd.cols)*4+2,y=PY+((d/sd.cols)|0)*4+2;ctx.strokeStyle=`rgba(0,0,0,${p*.6})`;ctx.beginPath();ctx.arc(x,y,6,0,7);ctx.stroke();ctx.strokeStyle=`rgba(255,214,60,${p})`;ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.stroke();ctx.fillStyle=`rgba(255,214,60,${p*.5})`;ctx.beginPath();ctx.arc(x,y,2,0,7);ctx.fill()}}
+ if(false){
   for(let r=1;r<sd.rows;r+=3)for(let c=1;c<sd.cols;c+=3){const i=r*sd.cols+c;if(sd.gin[i]&&(mode==='erase'?sd.grid[i]>.3:sd.grid[i]<.7)){ctx.beginPath();ctx.arc(PX+c*4+2,PY+r*4+2,4,0,7);ctx.stroke()}}}
  drawParts();
  if(!pickNeeded&&(pointer.seen||active)){const tip=drawWand(tx,ty,kind,active);if(active)drawStream(tip,tx,ty,nozR,kind,stg==='prime'?'170,170,170':(J.color&&J.color[1]||[220,220,220]).join(','))}
@@ -344,8 +352,8 @@ function drawWork(dt){const sd=J.sides[J.cur],stg=J.stage,mode=stg==='blast'?'er
  steps.forEach((s,i)=>{const y=76+i*0;});text(job.name,22,74,14,'#fff','left',800);
  steps.forEach((s,i)=>{const x=22+i*36;ctx.fillStyle=i<si?'#3fbf5a':i===si?'#ff8a1f':'rgba(255,255,255,.12)';rr(x,88,32,6,3);ctx.fill();text(s,x+16,104,8.5,i===si?'#ffb064':'#889','center',700)});
  const cAll=J.sides.reduce((a,s)=>a+s.cov,0)/J.sides.length;ctx.lineWidth=10;ctx.strokeStyle='rgba(255,255,255,.08)';ctx.beginPath();ctx.arc(108,170,46,0,7);ctx.stroke();
- ctx.strokeStyle=cAll>=.95?'#3fbf5a':'#ff8a1f';ctx.lineCap='round';ctx.beginPath();ctx.arc(108,170,46,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,cAll/.95));ctx.stroke();ctx.lineCap='butt';
- text(Math.min(100,Math.floor(cAll/.95*100))+'%',108,166,24,'#fff','center',900);text(stg==='blast'?'CLEAN':stg==='prime'?'PRIMED':'PAINTED',108,188,10,'#99a','center',700);
+ ctx.strokeStyle=cAll>=1?'#3fbf5a':'#ff8a1f';ctx.lineCap='round';ctx.beginPath();ctx.arc(108,170,46,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,cAll));ctx.stroke();ctx.lineCap='butt';
+ text(Math.min(100,Math.floor(cAll*100))+'%',108,166,24,'#fff','center',900);text(stg==='blast'?'CLEAN':stg==='prime'?'PRIMED':'PAINTED',108,188,10,'#99a','center',700);
  if(stg==='blast'){text(`${J.media.name}`,22,236,12,'#ccd','left',700);text(`Time ${J.time.toFixed(1)}s · par ${job.par}s`,22,254,12,J.time>job.par?'#ff7a6a':'#9aa3ad','left',600)}
  else if(stg==='paint'&&J.color)text('Color: '+J.color[0],22,240,12,'#ccd','left',700);else if(stg==='prime')text('Epoxy primer, 2 coats',22,240,12,'#ccd','left',700);
  if(job.sides>1){text(`Side ${J.cur+1} of 2`+(J.sides[1-J.cur].done?' · other ✓':''),22,274,12,'#ccd','left',600);button(22,286,172,34,'↻ Flip part',()=>{if(J.flip===0){J.flip=.001;J.swapped=false;buzz(10)}},{col:['#4a5563','#2d343d'],sz:13,pulse:sd.done&&!J.sides[1-J.cur].done})}
@@ -386,5 +394,5 @@ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;G.t+=dt;butt
   case'work':if(J.stage==='reveal')drawReveal(dt);else drawWork(dt);break;case'results':drawResults(dt);break;case'garage':drawGarage(dt);break}
  drawToast(dt);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-window.__g={dailyJob,endlessJob,dayKey,G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
+window.__g={pointer,dailyJob,endlessJob,dayKey,G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
 </script></body></html>
