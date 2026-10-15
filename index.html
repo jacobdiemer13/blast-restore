@@ -52,16 +52,16 @@ function tankPath(c){c.beginPath();c.moveTo(24,140);c.bezierCurveTo(26,86,92,56,
 function shapeTank(c,side){c.save();if(side){c.translate(380,0);c.scale(-1,1)}tankPath(c);c.fill();
  c.fillRect(70,200,20,20);c.fillRect(318,160,22,18);c.beginPath();c.ellipse(205,47,27,7,0,0,7);c.fill();c.fillRect(184,40,42,10);c.restore();}
 const JOBS=[
- {id:'wrench',name:'Combination Wrench',cust:'Earl',role:'retired machinist',quote:"This was my dad's 1962 wrench. Sat in a damp barn for thirty years.",pay:60,par:56,metal:'steel',mat:'Forged steel',best:'coarse',damage:[],shape:shapeWrench,hook:[318,104],sides:1,oldPaint:null,seed:3,
+ {id:'wrench',name:'Combination Wrench',cust:'Earl',role:'retired machinist',quote:"This was my dad's 1962 wrench. Sat in a damp barn for thirty years.",pay:60,par:21,metal:'steel',mat:'Forged steel',best:'coarse',damage:[],shape:shapeWrench,hook:[318,104],sides:1,oldPaint:null,seed:3,
   shade(c){c.save();c.translate(190,132);c.rotate(-.12);let g=c.createLinearGradient(0,-46,0,46);g.addColorStop(0,'rgba(255,255,255,.05)');g.addColorStop(.38,'rgba(255,255,255,.30)');g.addColorStop(.5,'rgba(255,255,255,.04)');g.addColorStop(.62,'rgba(0,0,0,.22)');g.addColorStop(1,'rgba(0,0,0,.5)');c.fillStyle=g;c.fillRect(-200,-60,400,120);
    for(const [x,r] of [[-132,42],[130,36]]){g=c.createRadialGradient(x-r*.35,-r*.4,2,x,0,r);g.addColorStop(0,'rgba(255,255,255,.25)');g.addColorStop(.7,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.35)');c.fillStyle=g;c.fillRect(x-r,-r,2*r,2*r)}c.restore()},
   spec(c){c.save();c.translate(190,132);c.rotate(-.12);c.fillStyle='rgba(255,255,255,.9)';c.filter='none';const g=c.createLinearGradient(0,-8,0,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.85)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(-100,-8,200,8);
    for(const [x,r] of [[-132,42],[130,36]]){const q=c.createRadialGradient(x-r*.4,-r*.45,0,x-r*.4,-r*.45,r*.5);q.addColorStop(0,'rgba(255,255,255,.9)');q.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=q;c.fillRect(x-r,-r,2*r,2*r)}c.restore()}},
- {id:'rim',name:'Alloy Wheel Rim',cust:'Dana',role:'weekend autocrosser',quote:"Curb rash, brake dust and fifteen winters of road salt. Make it look factory.",pay:180,par:106,metal:'alu',mat:'Cast aluminum',best:'fine',damage:['coarse'],damageMsg:'Steel grit pitted the soft aluminum!',shape:shapeRim,hook:[190,96],sides:1,oldPaint:[168,170,174],seed:9,
+ {id:'rim',name:'Alloy Wheel Rim',cust:'Dana',role:'weekend autocrosser',quote:"Curb rash, brake dust and fifteen winters of road salt. Make it look factory.",pay:180,par:41,metal:'alu',mat:'Cast aluminum',best:'fine',damage:['coarse'],damageMsg:'Steel grit pitted the soft aluminum!',shape:shapeRim,hook:[190,96],sides:1,oldPaint:[168,170,174],seed:9,
   shade(c){let g=c.createRadialGradient(190,130,0,190,130,122);[[0,'rgba(0,0,0,.5)'],[.16,'rgba(255,255,255,.22)'],[.3,'rgba(0,0,0,.08)'],[.45,'rgba(255,255,255,.06)'],[.78,'rgba(0,0,0,.18)'],[.82,'rgba(0,0,0,.55)'],[.88,'rgba(255,255,255,.3)'],[.95,'rgba(255,255,255,.08)'],[1,'rgba(0,0,0,.55)']].forEach(s=>g.addColorStop(...s));c.fillStyle=g;c.fillRect(0,0,380,260);
    g=c.createLinearGradient(70,10,310,250);g.addColorStop(0,'rgba(255,255,255,.18)');g.addColorStop(.5,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.3)');c.fillStyle=g;c.fillRect(0,0,380,260)},
   spec(c){c.lineCap='round';for(const [r,w,a0,a1,al] of [[112,5,3.5,4.6,.9],[112,4,.5,1.1,.35],[60,3,3.6,4.3,.6],[24,3,3.4,4.4,.7]]){c.strokeStyle=`rgba(255,255,255,${al})`;c.lineWidth=w;c.shadowColor='#fff';c.shadowBlur=6;c.beginPath();c.arc(190,130,r,a0,a1);c.stroke()}c.shadowBlur=0}},
- {id:'tank',name:'Motorcycle Gas Tank',cust:'Rico',role:'café racer builder',quote:"Barn-find '74 tank. Both sides are rough, so don't forget to flip it.",pay:350,par:163,metal:'sheet',mat:'Thin sheet steel',best:'medium',damage:['coarse'],damageMsg:'Coarse grit warped the thin sheet metal!',shape:shapeTank,hook:[205,46],sides:2,oldPaint:[34,86,150],seed:21,
+ {id:'tank',name:'Motorcycle Gas Tank',cust:'Rico',role:'café racer builder',quote:"Barn-find '74 tank. Both sides are rough, so don't forget to flip it.",pay:350,par:47,metal:'sheet',mat:'Thin sheet steel',best:'medium',damage:['coarse'],damageMsg:'Coarse grit warped the thin sheet metal!',shape:shapeTank,hook:[205,46],sides:2,oldPaint:[34,86,150],seed:21,
   shade(c,side){c.save();if(side){c.translate(380,0);c.scale(-1,1)}let g=c.createRadialGradient(165,92,4,190,130,240);g.addColorStop(0,'rgba(255,255,255,.42)');g.addColorStop(.25,'rgba(255,255,255,.12)');g.addColorStop(.5,'rgba(0,0,0,.02)');g.addColorStop(1,'rgba(0,0,0,.6)');c.fillStyle=g;c.fillRect(0,0,380,260);
    g=c.createRadialGradient(262,168,4,262,168,60);g.addColorStop(0,'rgba(0,0,0,.28)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,380,260);
    g=c.createLinearGradient(0,180,0,225);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.45)');c.fillStyle=g;c.fillRect(0,0,380,260);c.restore()},
@@ -69,9 +69,9 @@ const JOBS=[
    c.save();if(side){c.translate(380,0);c.scale(-1,1)}c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(60,190);c.quadraticCurveTo(170,205,300,196);c.stroke();c.restore()}}
 ];
 const MEDIA=[
- {id:'coarse',name:'Steel Grit',sub:'COARSE · 16 mesh',desc:'Fastest cut. Rips through heavy rust on thick steel. Aggressive.',spd:1.7,col:['#5b5f66','#3c3f44','#7a7f86']},
- {id:'medium',name:'Aluminum Oxide',sub:'MEDIUM · 60 grit',desc:'The all-rounder. Safe on sheet metal, good speed.',spd:1.2,col:['#a8794e','#8a5d3a','#c9996a']},
- {id:'fine',name:'Glass Bead',sub:'FINE · 100 mesh',desc:'Gentle satin finish. Safe on aluminum. Slow on heavy rust.',spd:.85,col:['#e6eef0','#c9d6da','#ffffff']}];
+ {id:'coarse',name:'Steel Grit',sub:'COARSE · 16 mesh',desc:'Fastest cut. Rips through heavy rust on thick steel. Aggressive.',spd:4.6,col:['#5b5f66','#3c3f44','#7a7f86']},
+ {id:'medium',name:'Aluminum Oxide',sub:'MEDIUM · 60 grit',desc:'The all-rounder. Safe on sheet metal, good speed.',spd:4.2,col:['#a8794e','#8a5d3a','#c9996a']},
+ {id:'fine',name:'Glass Bead',sub:'FINE · 100 mesh',desc:'Gentle satin finish. Safe on aluminum. Slow on heavy rust.',spd:2.3,col:['#e6eef0','#c9d6da','#ffffff']}];
 const COLORS=[['Gloss Black',[16,16,19]],['Candy Red',[160,12,20]],['Royal Blue',[18,58,158]],['Racing Green',[12,76,44]],['Safety Orange',[226,92,12]],['Bare + Clear',null]];
 // ---------- part generation ----------
 function genSide(job,idx,S){
@@ -326,9 +326,9 @@ function drawWork(dt){const sd=J.sides[J.cur],stg=J.stage,mode=stg==='blast'?'er
  const nozR=(stg==='blast'?20:28)*(save.up.nozzle&&stg==='blast'?1.35:1),press=save.up.comp?1:0;
  const pickNeeded=stg==='paint'&&!J.color;
  let active=pointer.down&&!sd.done&&!pickNeeded&&J.flip===0;let tx=pointer.x,ty=Math.max(PY-10,pointer.y-(pointer.touch?lerp(140,70,clamp((pointer.y-250)/150)):0));
- if(active){const lx=tx-PX,ly=ty-PY;const rate=stg==='blast'?6.4*J.media.spd*(save.up.comp?1.5:1):7.6;const a=clamp(rate*dt,0,.5);
+ if(active){const lx=tx-PX,ly=ty-PY;const rate=stg==='blast'?6.4*J.media.spd*(save.up.comp?1.5:1):7.6;const a=clamp(rate*dt,0,.85);
   const L0=J.lastT&&J.lastT.s===sd?J.lastT:{x:lx,y:ly},dd=Math.hypot(lx-L0.x,ly-L0.y),n=Math.min(30,Math.max(1,Math.ceil(dd/(nozR*.35))));let hit=0;
-  for(let k=1;k<=n;k++){const q=k/n;hit+=applyTool(sd,L0.x+(lx-L0.x)*q+(Math.random()-.5)*5,L0.y+(ly-L0.y)*q+(Math.random()-.5)*5,nozR,clamp(a*Math.max(1,n*.5)/n,0,.5),mode)}J.lastT={x:lx,y:ly,s:sd};
+  for(let k=1;k<=n;k++){const q=k/n;hit+=applyTool(sd,L0.x+(lx-L0.x)*q+(Math.random()-.5)*5,L0.y+(ly-L0.y)*q+(Math.random()-.5)*5,nozR,clamp(a*Math.max(1,n*.5)/n,0,.85),mode)}J.lastT={x:lx,y:ly,s:sd};
   if(stg==='blast'){J.time+=dt;shake=1.3;const dirty=hit>.002;if(dirty){puff(tx,ty,job.metal==='alu'?'rgba(120,108,96,A)':'rgba(150,88,48,A)',3,70,9);if(Math.random()<.5)flake(tx,ty,job.metal==='alu'?'#cfcfc8':(Math.random()<.4&&job.oldPaint?`rgb(${job.oldPaint})`:'#8a4318'))}else puff(tx,ty,'rgba(190,182,170,A)',1,60,8);
    if(Math.random()<.25)buzz(6)}else{if(Math.random()<.6)puff(tx,ty,J.stage==='prime'?'rgba(150,150,150,A)':`rgba(${(J.color[1]||[200,200,200]).join(',')},A)`,1,30,7)}
   sd.cov=coverage(sd,mode);if(sd.cov>=1&&!sd.done){sd.done=true;sd.fade=1;ding();buzz(25);
