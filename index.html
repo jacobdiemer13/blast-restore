@@ -25,7 +25,7 @@ const mk=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,Mat
 const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 // ---------- save ----------
 const SK='blastrestore_v1';
-let save={cash:0,stars:[0,0,0],up:{nozzle:false,comp:false},garage:{},sets:{},daily:{last:'',streak:0},endless:0,restored:0,lv:[],fins:{},music:true,sfx:true,noAds:false};
+let save={cash:0,stars:[0,0,0],up:{nozzle:false,comp:false},garage:{},sets:{},daily:{last:'',streak:0},endless:0,restored:0,lv:[],fins:{},iap:{},favs:[],music:true,sfx:true,noAds:false};
 try{const s=JSON.parse(localStorage.getItem(SK));if(s)save=Object.assign(save,s)}catch(e){}
 if(!save.lv.length&&save.stars.some(x=>x))save.lv[0]=save.stars[0];
 const persist=()=>{try{localStorage.setItem(SK,JSON.stringify(save))}catch(e){}};
@@ -165,14 +165,18 @@ function autoShade(job,sd){const {w,h,S,al}=sd,n=w*h,A=new Float32Array(n);for(l
   const hz=(nx*.3+ny*.2+1)/l;const s=Math.pow(clamp(lam*.6+hz*.4),18)*255;P[i*4]=P[i*4+1]=P[i*4+2]=255;P[i*4+3]=s}
  const c1=mk(w,h);c1.getContext('2d').putImageData(sh,0,0);const c2=mk(w,h);c2.getContext('2d').putImageData(sp,0,0);sd.shade=c1;sd.spec=c2}
 // ---------- finishes ----------
-const FINISHES=[['clear','Bare + Clear',0],['camo_wood','Woodland Camo',400],['camo_desert','Desert Camo',400],['camo_digital','Digital Camo',450],['camo_snow','Snow Camo',400],['tiedye','Tie-Dye',600],['rainbow','Rainbow',600],['flake','Metal Flake',500],['candy','Candy Apple',500],['carbon','Carbon Fiber',800],['flames','Hot Rod Flames',900]];
-const FIN_GLOSS={camo_wood:.15,camo_desert:.15,camo_digital:.15,camo_snow:.2,carbon:.9,candy:1,flake:.95,flames:.85,tiedye:.6,rainbow:.7};
+const CAMO={camo_wood:['Woodland',[[78,86,52],[52,62,34],[38,33,24],[108,96,62]]],camo_desert:['Desert',[[196,172,130],[160,128,88],[124,98,66],[210,190,150]]],camo_digital:['Digital',[[104,112,82],[70,80,54],[44,48,34],[146,142,110]],7],
+ camo_snow:['Snow',[[234,237,240],[176,182,188],[118,124,130],[214,218,222]]],camo_red:['Red',[[150,28,26],[96,16,16],[52,12,12],[190,70,56]]],camo_blue:['Blue',[[48,82,140],[26,48,96],[16,24,52],[96,132,186]]],
+ camo_pink:['Pink',[[232,130,170],[190,74,128],[120,36,80],[248,186,210]]],camo_blaze:['Blaze',[[240,110,20],[190,70,10],[60,40,24],[255,160,60]]],camo_urban:['Urban',[[128,130,134],[88,90,94],[48,50,54],[176,178,180]]]};
+const TIE={tiedye:['Classic',0,360],tiedye_red:['Red',345,50],tiedye_blue:['Blue',200,70],tiedye_green:['Green',95,70],tiedye_purple:['Purple',265,60],tiedye_sunset:['Sunset',0,60]};
+const FINISHES=[['clear','Bare + Clear'],...Object.entries(CAMO).map(([k,v])=>[k,v[0]+' Camo']),...Object.entries(TIE).map(([k,v])=>[k,v[0]+' Tie-Dye']),['rainbow','Rainbow'],['flake','Metal Flake'],['candy','Candy Apple'],['carbon','Carbon Fiber'],['flames','Hot Rod Flames']];
+const FIN_GLOSS={carbon:.9,candy:1,flake:.95,flames:.85,rainbow:.7};Object.keys(CAMO).forEach(k=>FIN_GLOSS[k]=.15);Object.keys(TIE).forEach(k=>FIN_GLOSS[k]=.6);
 function hsl(h,s,l){h=((h%360)+360)%360/360;const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l);return 255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))};return[f(0),f(8),f(4)]}
 function finPix(id,x,y,hf,seed){const n=fbm(x*.03,y*.03,3,seed+90),m=fbm(x*.05+40,y*.05,3,seed+91);
  const camo=(cols,sc,px)=>{let X=x,Y=y;if(px){X=Math.floor(x/px)*px;Y=Math.floor(y/px)*px}const a=fbm(X*sc,Y*sc,3,seed+92),b=fbm(X*sc+70,Y*sc,3,seed+93);return a>.56?cols[1]:b>.58?cols[2]:a<.4?cols[3]||cols[0]:cols[0]};
- switch(id){case'camo_wood':return camo([[78,86,52],[52,62,34],[38,33,24],[108,96,62]],.03);case'camo_desert':return camo([[196,172,130],[160,128,88],[124,98,66],[210,190,150]],.028);
-  case'camo_digital':return camo([[104,112,82],[70,80,54],[44,48,34],[146,142,110]],.035,7);case'camo_snow':return camo([[234,237,240],[176,182,188],[118,124,130],[214,218,222]],.03);
-  case'tiedye':{const a=Math.atan2(y-130,x-190),r=Math.hypot(x-190,y-130);return hsl(a*57.3*2+r*2.2+n*140,.85,.55)}
+ if(CAMO[id]){const c=CAMO[id];return camo(c[1],c[2]?.035:.03,c[2])}
+ if(TIE[id]){const t=TIE[id],a=Math.atan2(y-130,x-190),r=Math.hypot(x-190,y-130),ph=a*57.3*2+r*2.2+n*140;if(t[2]>=360)return hsl(ph,.85,.55);const w=(Math.sin(ph/57.3)+1)/2;return hsl(t[1]+(w-.5)*t[2],.85,.32+.42*((Math.sin(ph/30)+1)/2))}
+ switch(id){
   case'rainbow':return hsl(x*.95+y*.25+n*30,.82,.52);
   case'flake':{const b=[70,18,120];return hf>.965?[220,200,255]:b.map(v=>v*(.8+.4*n))}
   case'candy':{const k=.65+.5*n;return[175*k,8*k,24*k]}
@@ -300,7 +304,14 @@ const Music={on:false,init(){if(this.g)return;this.g=AC.createGain();this.g.gain
    this.step++;this.next+=spb*(st%2?0.92:1.08)}}};
 function tone(f,d=.12,type='sine',v=.15,f2){if(!AC||!save.sfx)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d)}
 const click=()=>tone(900,.05,'square',.05),ding=()=>{tone(1320,.25,'sine',.12);setTimeout(()=>tone(1760,.35,'sine',.1),90)},cash=()=>{[0,70,140].forEach((d,i)=>setTimeout(()=>tone(1500+i*300,.18,'triangle',.08),d))};
-const Monetize={adsRemoved:()=>!!save.noAds,showRewarded(cb){if(save.noAds){cb();toast('Boost applied (ad-free)');return}G.ad={t:0,cb};setHiss(false);if(Music.g)Music.g.gain.setTargetAtTime(0,AC.currentTime,.1)},
+const PRODUCTS={bundle_all:{name:'All Finishes Bundle',price:'$4.99',desc:'Every premium finish, incl. future ones.',fins:'*'},pack_camo:{name:'Camo Pack',price:'$1.99',desc:'All 9 camo patterns.',fins:Object.keys(CAMO)},pack_tiedye:{name:'Tie-Dye Pack',price:'$1.99',desc:'All 6 tie-dye styles.',fins:Object.keys(TIE)}};
+FINISHES.slice(1).forEach(f=>PRODUCTS['fin_'+f[0]]={name:f[1],price:'$0.99',desc:'Premium finish, yours forever.',fins:[f[0]]});
+const ownsFin=id=>id==='clear'||!!(save.fins&&save.fins[id])||Object.keys(save.iap).some(p=>save.iap[p]&&PRODUCTS[p]&&(PRODUCTS[p].fins==='*'||PRODUCTS[p].fins.includes(id)));
+const Monetize={owns:pid=>!!save.iap[pid],
+ buy(pid,cb){G.store={pid,cb}},            // real IAP: call native store here, then _complete(pid) on success
+ _complete(pid){save.iap[pid]=1;persist();cash();buzz([20,40,20]);toast(PRODUCTS[pid].name+' unlocked! (mock purchase)');const cb=G.store&&G.store.cb;G.store=null;cb&&cb()},
+ restore(){toast('Purchases restored')},
+ adsRemoved:()=>!!save.noAds,showRewarded(cb){if(save.noAds){cb();toast('Boost applied (ad-free)');return}G.ad={t:0,cb};setHiss(false);if(Music.g)Music.g.gain.setTargetAtTime(0,AC.currentTime,.1)},
  buyRemoveAds(){save.noAds=true;persist();cash();toast('Ads removed. Boosts are now instant. (mock purchase)')}};
 function drawAd(dt){const a=G.ad;a.t+=dt;ctx.fillStyle='rgba(0,0,0,.92)';ctx.fillRect(0,0,W,H);const g=ctx.createLinearGradient(200,80,620,320);g.addColorStop(0,'#2a5bd7');g.addColorStop(1,'#7b2ad7');ctx.fillStyle=g;rr(210,80,400,220,16);ctx.fill();
  text('AD',230,104,12,'rgba(255,255,255,.7)','left',900);text('Your ad here',410,180,26,'#fff','center',900);text('(mock rewarded ad: real ads plug in later)',410,214,12,'rgba(255,255,255,.75)','center',500);
@@ -442,7 +453,7 @@ function drawGarage(dt){if(!GBG)GBG=genGarageBG();ctx.drawImage(GBG,0,0,W,H);
     else{ctx.drawImage(silhouette(i),cx-dw/2,by+bh-dh,dw,dh);text('?',cx,by+bh-dh/2,24,'rgba(255,255,255,.25)','center',900);ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-56,sy+2,112,12,3);ctx.fill();text(JOBS[i].name.slice(0,22),cx,sy+8.5,8,'#a99','center',700)}})});
  if(save.sets.tools){ctx.save();const g=ctx.createLinearGradient(0,368,0,392);g.addColorStop(0,'#f6d77a');g.addColorStop(1,'#a4761a');ctx.fillStyle=g;rr(W/2-90,366,180,26,5);ctx.fill();ctx.restore();text('MASTER TOOL RESTORER',W/2,379,11,'#4a3208','center',900)}
  else text('Restore parts to fill the shelves. Complete a set for a bonus.',W/2,380,12,'rgba(255,230,200,.55)','center',500)}
-function drawShop(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H);text('TOOL SHOP',24,26,22,'#fff','left',900);text('Upgrades are bought with job earnings only.',170,27,13,'#aab','left',500);cashPill();if(!save.noAds)button(24,360,190,30,'Remove Ads · $2.99 (mock)',()=>Monetize.buyRemoveAds(),{col:['#6a4ad0','#3f2a90'],sz:12});else text('Ads removed ✓',30,375,12,'#9fdca9','left',700);
+function drawShop(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H);text('TOOL SHOP',24,26,22,'#fff','left',900);text('Upgrades are bought with job earnings only.',170,27,13,'#aab','left',500);cashPill();button(224,360,170,30,'🛒 Finish Store',()=>{G.store={menu:true}},{col:['#6a4ad0','#3f2a90'],sz:12});if(!save.noAds)button(24,360,190,30,'Remove Ads · $2.99 (mock)',()=>Monetize.buyRemoveAds(),{col:['#6a4ad0','#3f2a90'],sz:12});else text('Ads removed ✓',30,375,12,'#9fdca9','left',700);
  button(W-262,10,100,30,'◀ Jobs',()=>{G.scr='map'},{col:['#4a5563','#2d343d'],sz:13});
  const U=[['nozzle','Wide-Bore Boron Nozzle',150,'+35% blast width. Cover more metal every pass.','#9aa'],['comp','185 CFM Tow-Behind Compressor',250,'+50% cutting speed and a deeper roar.','#c84']];
  U.forEach(([k,n,c,d],i)=>{const x=60+i*360,y=80,w=340,h=270;panel(x,y,w,h,.85);ctx.save();ctx.translate(x+w/2,y+95);
@@ -501,28 +512,54 @@ function drawWork(dt){const sd=J.sides[J.cur],stg=J.stage,mode=stg==='blast'?'er
  if(stg==='blast'){text(`${J.media.name}`,22,236,12,'#ccd','left',700);text(`Time ${J.time.toFixed(1)}s · par ${job.par}s`,22,254,12,J.time>job.par?'#ff7a6a':'#9aa3ad','left',600)}
  else if(stg==='paint'&&J.color)text('Color: '+J.color[0],22,240,12,'#ccd','left',700);else if(stg==='prime')text('Epoxy primer, 2 coats',22,240,12,'#ccd','left',700);
  if(stg!=='blast'&&!J.hp&&!J.sides.every(s=>s.done))button(22,250,172,28,save.noAds?'⚡ HP Paint Gun':'▶ Ad: HP Paint Gun',()=>Monetize.showRewarded(()=>{J.hp=true;toast('High-pressure gun: faster prime and paint this job!')}),{col:['#3fa9e8','#1f6db0'],sz:12});else if(J.hp&&stg!=='blast')text('⚡ HP gun active',22,262,12,'#7fd0ff','left',700);
- if(job.sides>1){text(`Side ${J.cur+1} of 2`+(J.sides[1-J.cur].done?' · other ✓':''),22,284-(stg==='blast'?10:0)+0,12,'#ccd','left',600);button(22,286,172,34,'↻ Flip part',()=>{if(J.flip===0){J.flip=.001;J.swapped=false;buzz(10)}},{col:['#4a5563','#2d343d'],sz:13,pulse:sd.done&&!J.sides[1-J.cur].done})}
+ if(job.sides>1){if(stg==='blast'||J.hp||J.sides.every(s=>s.done))text(`Side ${J.cur+1} of 2`+(J.sides[1-J.cur].done?' · other ✓':''),22,284-(stg==='blast'?10:0)+0,12,'#ccd','left',600);button(22,286,172,34,'↻ Flip part',()=>{if(J.flip===0){J.flip=.001;J.swapped=false;buzz(10)}},{col:['#4a5563','#2d343d'],sz:13,pulse:sd.done&&!J.sides[1-J.cur].done})}
  const all=J.sides.every(s=>s.done);if(all&&!(stg==='paint'&&!J.color)){button(22,338,172,42,stg==='blast'?'Prime ▶':stg==='prime'?'Paint ▶':'Reassemble ▶',nextStage,{pulse:true})}
  else text(stg==='blast'?'Drag to blast':'Drag to spray',108,360,12,'rgba(255,255,255,.5)','center',500);
  text('$ '+save.cash.toLocaleString(),W-16,24,16,'#7ee08a','right',800);button(W-100,40,84,26,'✕ Quit',()=>{setHiss(false);G.scr='map'},{col:['#4a5563','#2d343d'],sz:11});
  if(pickNeeded)drawPicker();}
 function pcol(){const c=J&&J.color&&J.color[1];if(!c)return[210,210,215];if(typeof c==='string'){const v=finPix(c,120,110,.5,1);return v.map(Math.round)}return c}
-const pk={h:0,v:.5,fin:null,buy:null};
+const pk={h:0,v:.5,fin:null,fav:null,pg:0};
 function pkRGB(){const c=hsl(pk.h,.85,.5);return pk.v<.5?c.map(x=>Math.round(x*(.1+pk.v*1.8))):c.map(x=>Math.round(lerp(x,250,(pk.v-.5)*1.7)))}
-function pkName(){if(pk.fin)return FINISHES.find(f=>f[0]===pk.fin)[1];const N=[[15,'Red'],[40,'Orange'],[65,'Yellow'],[160,'Green'],[195,'Teal'],[255,'Blue'],[290,'Purple'],[335,'Magenta'],[361,'Red']];const n=N.find(q=>pk.h<q[0])[1];return(pk.v<.2?'Deep ':pk.v<.4?'Dark ':pk.v>.8?'Pale ':pk.v>.62?'Light ':'Gloss ')+n}
-function drawPicker(){const x0=222,y0=262;panel(x0,y0,590,134,.94);text('PAINT',x0+14,y0+16,11,'#ff9a3a','left',900);text('Standard colors are free',x0+64,y0+16,10,'#99a','left',600);
+function stdName(){const N=[[15,'Red'],[40,'Orange'],[65,'Yellow'],[160,'Green'],[195,'Teal'],[255,'Blue'],[290,'Purple'],[335,'Magenta'],[361,'Red']];const n=N.find(q=>pk.h<q[0])[1];return(pk.v<.2?'Deep ':pk.v<.4?'Dark ':pk.v>.8?'Pale ':pk.v>.62?'Light ':'Gloss ')+n}
+function pkCur(){if(pk.fav)return pk.fav;if(pk.fin)return[FINISHES.find(f=>f[0]===pk.fin)[1],pk.fin];return[stdName(),pkRGB()]}
+function pkName(){return pkCur()[0]}
+function swatchOf(val,x,y,w,h){ctx.save();rr(x,y,w,h,5);ctx.clip();if(typeof val==='string')ctx.drawImage(finSwatch(val),x,y,w,h);else{ctx.fillStyle=val?`rgb(${val})`:'#9a9ca0';ctx.fillRect(x,y,w,h)}const g=ctx.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'rgba(255,255,255,.3)');g.addColorStop(.5,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.fillRect(x,y,w,h);ctx.restore()}
+function drawPicker(){const x0=222,y0=190;panel(x0,y0,590,206,.95);text('PAINT',x0+14,y0+16,11,'#ff9a3a','left',900);text('Standard colors are free',x0+64,y0+16,10,'#99a','left',600);
  const bx=x0+14,bw=300;let g=ctx.createLinearGradient(bx,0,bx+bw,0);for(let k=0;k<=12;k++)g.addColorStop(k/12,`rgb(${hsl(k*30,.85,.5).map(Math.round)})`);ctx.fillStyle=g;rr(bx,y0+28,bw,16,8);ctx.fill();
  const mid=hsl(pk.h,.85,.5).map(Math.round);g=ctx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,'#111');g.addColorStop(.5,`rgb(${mid})`);g.addColorStop(1,'#fafafa');ctx.fillStyle=g;rr(bx,y0+52,bw,16,8);ctx.fill();
- const kn=(x,y)=>{ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke()};if(!pk.fin){kn(bx+pk.h/360*bw,y0+36);kn(bx+pk.v*bw,y0+60)}
+ const kn=(x,y)=>{ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke()};if(!pk.fin&&!pk.fav){kn(bx+pk.h/360*bw,y0+36);kn(bx+pk.v*bw,y0+60)}
  const hb={x:bx-6,y:y0+24,w:bw+12,h:24},vb={x:bx-6,y:y0+48,w:bw+12,h:24};
- buttons.push({...hb,fn:p=>{pk.h=clamp((p.x-bx)/bw)*360;pk.fin=null;pk.buy=null}},{...vb,fn:p=>{pk.v=clamp((p.x-bx)/bw);pk.fin=null;pk.buy=null}});
- if(pointer.down){if(pointer.y>=hb.y&&pointer.y<=hb.y+hb.h&&pointer.x>hb.x&&pointer.x<hb.x+hb.w)pk.h=clamp((pointer.x-bx)/bw)*360;if(pointer.y>=vb.y&&pointer.y<=vb.y+vb.h&&pointer.x>vb.x&&pointer.x<vb.x+vb.w)pk.v=clamp((pointer.x-bx)/bw)}
- const px=x0+340;ctx.save();rr(px,y0+26,60,44,8);ctx.clip();if(pk.fin)ctx.drawImage(finSwatch(pk.fin),px,y0+26,60,44);else{ctx.fillStyle=`rgb(${pkRGB()})`;ctx.fillRect(px,y0+26,60,44)}const sg=ctx.createLinearGradient(0,y0+26,0,y0+70);sg.addColorStop(0,'rgba(255,255,255,.35)');sg.addColorStop(.45,'rgba(255,255,255,0)');ctx.fillStyle=sg;ctx.fillRect(px,y0+26,60,44);ctx.restore();
- text(pkName(),px+70,y0+38,12,'#fff','left',800);button(px+70,y0+48,150,26,'Spray this ▶',()=>{pickColor([pkName(),pk.fin||pkRGB()])},{sz:13,pulse:true});
- text('SPECIALTY FINISHES',x0+14,y0+84,9,'#c9a','left',900);if(pk.buy){const f=FINISHES.find(q=>q[0]===pk.buy);text(save.cash>=f[2]?`Tap ${f[1]} again to buy for $${f[2]}`:`Need $${f[2]} for ${f[1]}`,x0+580,y0+84,10,save.cash>=f[2]?'#ffd27a':'#ff8a7a','right',700)}
- FINISHES.forEach((f,i)=>{const x=x0+12+i*52.5,y=y0+92,own=!f[2]||save.fins[f[0]];ctx.save();rr(x,y,48,30,5);ctx.clip();ctx.drawImage(finSwatch(f[0]),x,y);if(!own){ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(x,y,48,30)}ctx.restore();
-  if(pk.fin===f[0]){ctx.strokeStyle='#ffb347';ctx.lineWidth=2;rr(x-1,y-1,50,32,6);ctx.stroke()}text(own?f[1].split(' ')[0]:'$'+f[2],x+24,y+36,8,own?'#ddd':'#ffd27a','center',800);if(!own)text('🔒',x+24,y+15,11,'#fff','center');
-  buttons.push({x,y,w:48,h:40,fn:()=>{click();if(own){pk.fin=f[0];pk.buy=null}else if(pk.buy===f[0]&&save.cash>=f[2]){save.cash-=f[2];save.fins[f[0]]=1;persist();cash();pk.fin=f[0];pk.buy=null;toast(f[1]+' unlocked!')}else pk.buy=f[0]}})})}
+ buttons.push({...hb,fn:p=>{pk.h=clamp((p.x-bx)/bw)*360;pk.fin=pk.fav=null}},{...vb,fn:p=>{pk.v=clamp((p.x-bx)/bw);pk.fin=pk.fav=null}});
+ if(pointer.down){if(pointer.y>=hb.y&&pointer.y<=hb.y+hb.h&&pointer.x>hb.x&&pointer.x<hb.x+hb.w){pk.h=clamp((pointer.x-bx)/bw)*360;pk.fin=pk.fav=null}if(pointer.y>=vb.y&&pointer.y<=vb.y+vb.h&&pointer.x>vb.x&&pointer.x<vb.x+vb.w){pk.v=clamp((pointer.x-bx)/bw);pk.fin=pk.fav=null}}
+ const cur=pkCur(),px=x0+334;swatchOf(cur[1],px,y0+26,58,44);text(cur[0],px+68,y0+36,12,'#fff','left',800);
+ button(px+68,y0+46,118,26,'Spray this ▶',()=>{const c=pkCur();pickColor([c[0],c[1]])},{sz:12,pulse:true});
+ const isFav=save.favs.some(f=>f[0]===cur[0]&&JSON.stringify(f[1])===JSON.stringify(cur[1]));
+ button(px+192,y0+46,60,26,isFav?'★ Saved':'☆ Save',()=>{if(isFav)return;if(save.favs.length>=10){toast('Favorites full (10). Tap × to remove one.');return}save.favs.push([cur[0],cur[1]]);persist();toast('Saved to favorites')},{sz:11,dis:isFav,col:['#c9a227','#8a6d10']});
+ // favorites
+ text('FAVORITES',x0+14,y0+90,9,'#e6c35a','left',900);
+ for(let i=0;i<10;i++){const x=x0+86+i*49,y=y0+80,f=save.favs[i];if(!f){ctx.save();ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(255,255,255,.22)';rr(x,y,40,24,5);ctx.stroke();ctx.restore();continue}
+  swatchOf(f[1],x,y,40,24);if(pk.fav===f){ctx.strokeStyle='#ffb347';ctx.lineWidth=2;rr(x-1,y-1,42,26,6);ctx.stroke()}
+  buttons.push({x,y,w:40,h:24,fn:()=>{click();pk.fav=f;pk.fin=null}});ctx.fillStyle='rgba(0,0,0,.75)';ctx.beginPath();ctx.arc(x+38,y+2,6,0,7);ctx.fill();text('×',x+38,y+2,10,'#fff','center',900);
+  buttons.push({x:x+30,y:y-6,w:16,h:16,fn:()=>{save.favs.splice(i,1);if(pk.fav===f)pk.fav=null;persist();click()}})}
+ // premium
+ text('PREMIUM FINISHES',x0+14,y0+122,9,'#c9a','left',900);button(x0+470,y0+112,106,22,'🛒 Packs & bundle',()=>{G.store={menu:true}},{sz:10,col:['#6a4ad0','#3f2a90']});
+ const per=9,list=FINISHES,pages=Math.ceil(list.length/per);pk.pg=Math.min(pk.pg,pages-1);
+ button(x0+10,y0+140,20,38,'◀',()=>{pk.pg=(pk.pg+pages-1)%pages},{sz:11,col:['#4a5563','#2d343d']});button(x0+560,y0+140,20,38,'▶',()=>{pk.pg=(pk.pg+1)%pages},{sz:11,col:['#4a5563','#2d343d']});
+ list.slice(pk.pg*per,pk.pg*per+per).forEach((f,i)=>{const x=x0+38+i*58,y=y0+136,own=ownsFin(f[0]);swatchOf(f[0],x,y,52,32);if(!own){ctx.fillStyle='rgba(0,0,0,.35)';rr(x,y,52,32,5);ctx.fill();ctx.fillStyle='#2e9e4a';rr(x+8,y+20,36,13,4);ctx.fill();text('$0.99',x+26,y+27,8,'#fff','center',900)}
+  if(pk.fin===f[0]&&!pk.fav){ctx.strokeStyle='#ffb347';ctx.lineWidth=2;rr(x-1,y-1,54,34,6);ctx.stroke()}text(f[1].replace(' Camo','').replace(' Tie-Dye',' TD'),x+26,y+42,8,own?'#ddd':'#bbb','center',800);
+  buttons.push({x,y,w:52,h:44,fn:()=>{click();if(own){pk.fin=f[0];pk.fav=null}else Monetize.buy('fin_'+f[0],()=>{pk.fin=f[0];pk.fav=null})}})});
+ text(`${pk.pg+1}/${pages}`,x0+295,y0+196,9,'#889','center',700)}
+function drawStore(){const st=G.store;ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);
+ if(st.menu){panel(170,40,480,320,.97);text('FINISH STORE',190,66,16,'#fff','left',900);text('Mock store: real in-app purchases plug in later',190,86,10,'#99a','left',500);
+  ['bundle_all','pack_camo','pack_tiedye'].forEach((pid,i)=>{const P=PRODUCTS[pid],y=104+i*74;panel(190,y,440,64,.9);const ids=P.fins==='*'?FINISHES.slice(1).map(f=>f[0]):P.fins;ids.slice(0,6).forEach((id,k)=>swatchOf(id,200+k*18,y+12,30,40));
+   text(P.name,330,y+22,14,'#fff','left',800);text(P.desc,330,y+42,11,'#aab','left',500);const own=Monetize.owns(pid);button(530,y+16,88,32,own?'Owned ✓':P.price,()=>{G.store={pid,cb:()=>{G.store={menu:true}}}},{dis:own,col:['#2e9e4a','#1c6e31'],sz:14})});
+  button(190,326,100,26,'Restore',()=>Monetize.restore(),{sz:11,col:['#4a5563','#2d343d']});button(530,326,100,26,'Close',()=>{G.store=null},{sz:12,col:['#4a5563','#2d343d']});return}
+ const P=PRODUCTS[st.pid];panel(230,70,360,250,.97);text('CONFIRM PURCHASE',410,96,12,'#ff9a3a','center',900);
+ const id=P.fins==='*'?'rainbow':P.fins[0];swatchOf(id,250,112,90,64);text(P.name,356,128,15,'#fff','left',800);text(P.desc,356,150,11,'#aab','left',500);text(P.price,356,170,18,'#7ee08a','left',900);
+ button(250,196,320,38,`Buy for ${P.price}`,()=>Monetize._complete(st.pid),{col:['#2e9e4a','#1c6e31'],sz:15});
+ if(st.pid.startsWith('fin_')){const f=st.pid.slice(4),pack=CAMO[f]?'pack_camo':TIE[f]?'pack_tiedye':null;if(pack&&!Monetize.owns(pack))button(250,242,155,30,`${PRODUCTS[pack].name} ${PRODUCTS[pack].price}`,()=>{G.store={pid:pack,cb:st.cb}},{sz:11,col:['#6a4ad0','#3f2a90']});
+  if(!Monetize.owns('bundle_all'))button(pack?415:250,242,pack?155:320,30,`All Finishes ${PRODUCTS.bundle_all.price}`,()=>{G.store={pid:'bundle_all',cb:st.cb}},{sz:11,col:['#6a4ad0','#3f2a90']})}
+ button(360,284,100,26,'Cancel',()=>{G.store=null},{sz:12,col:['#4a5563','#2d343d']})}
 function drawReveal(dt){J.rev+=dt;const sd=J.sides[0],t=J.rev;ctx.drawImage(BG,0,0,W,H);
  if(pointer.down)J.slider=clamp((pointer.x-PX)/PW);else if(t<2.2)J.slider=clamp(1-t/2.2*.5,0,1);
  const cut=PX+PW*J.slider;
@@ -553,7 +590,7 @@ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;G.t+=dt;butt
  stepParts(dt);
  switch(G.scr){case'title':drawTitle(dt);break;case'map':drawMap();break;case'shop':drawShop();break;case'loading':drawLoading();break;case'brief':drawBrief();break;case'media':drawMedia();break;
   case'work':if(J.stage==='reveal')drawReveal(dt);else drawWork(dt);break;case'results':drawResults(dt);break;case'garage':drawGarage(dt);break}
- if(G.ad){buttons=[];drawAd(dt)}drawToast(dt);requestAnimationFrame(frame)}
+ if(G.ad){buttons=[];drawAd(dt)}else if(G.store){buttons=[];drawStore()}drawToast(dt);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-window.__g={get job(){return job},genSide,genPaint,compose,LEVELS,levelJob,Monetize,pointer,dailyJob,endlessJob,dayKey,G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
+window.__g={pk,FINISHES,ownsFin,get job(){return job},genSide,genPaint,compose,LEVELS,levelJob,Monetize,pointer,dailyJob,endlessJob,dayKey,G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
 </script></body></html>
