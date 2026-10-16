@@ -43,6 +43,8 @@ const UPG=[
 const upT=k=>save.up[k]|0,UPG_FX=(k,t)=>UPG.find(u=>u.k===k).fx[t],FX=k=>UPG_FX(k,upT(k));
 
 if(!save.lv.length&&save.stars.some(x=>x))save.lv[0]=save.stars[0];
+if(!save.gv){const OLD={tools:300,moto:800,home:900,yard:1000,car:2500};save.legacySets={};for(const k in save.sets)if(OLD[k])save.legacySets[k]=OLD[k];save.sets={};save.gv=3} // v3 garage: old set bonuses credited against new ones
+
 const persist=()=>{try{localStorage.setItem(SK,JSON.stringify(save))}catch(e){}};
 // ---------- noise ----------
 const PERM=new Uint8Array(512);(()=>{const p=[...Array(256).keys()];let s=1337;for(let i=255;i>0;i--){s=(s*16807)%2147483647;const j=s%(i+1);[p[i],p[j]]=[p[j],p[i]]}for(let i=0;i<512;i++)PERM[i]=p[i&255]})();
@@ -164,9 +166,258 @@ JOBS.push(
    CUT(c,()=>{CI(c,86,200,34);CI(c,300,200,34);c.beginPath();c.moveTo(130,116);c.quadraticCurveTo(150,84,190,80);c.lineTo(190,116);c.closePath();c.fill();c.beginPath();c.moveTo(200,80);c.lineTo(246,82);c.quadraticCurveTo(272,90,286,116);c.lineTo(200,116);c.closePath();c.fill()});c.restore()},
   relief(c,s){c.save();FLIP(c,s);c.fillRect(20,146,350,5);c.globalAlpha=.7;c.fillRect(194,80,6,110);RR(c,232,128,26,8,4);c.restore()}})
 );
+// ---------- v3 parts: 76 more unique objects ----------
+const POLY=(c,p)=>{c.beginPath();p.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill()};
+const RING=(c,x,y,r,w)=>{c.save();c.lineWidth=w;c.beginPath();c.arc(x,y,r,0,6.2832);c.stroke();c.restore()};
+const ARC=(c,x,y,r,a0,a1,w)=>{c.save();c.lineWidth=w;c.lineCap='round';c.beginPath();c.arc(x,y,r,a0,a1);c.stroke();c.restore()};
+const ROT=(c,x,y,a,f)=>{c.save();c.translate(x,y);c.rotate(a);f();c.restore()};
+const TXT=(c,s,x,y,sz)=>{c.save();c.font=`900 ${sz}px Impact,"Arial Black",sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(s,x,y);c.restore()};
+const BRASS={tint:'brass',oldPaint:null},COPPER={tint:'copper',oldPaint:null};
+const ALIEN={alien:true,oldPaint:null,best:'medium',damage:['coarse'],damageMsg:'Steel grit scarred the alien alloy!'};
+JOBS.push(
+// ===== HAND TOOLS =====
+T({id:'pliers',name:'Lineman\'s Pliers',mat:'Forged steel',quote:'Dropped in the creek decades ago. Still snaps shut.',
+ shape(c){CI(c,165,130,24);POLY(c,[[170,112],[40,116],[30,130],[40,144],[170,148]]);CUT(c,()=>POLY(c,[[150,130],[24,112],[24,148]]));LN(c,[[175,122],[260,100],[352,84]],20);LN(c,[[175,138],[260,160],[352,176]],20)},
+ relief(c){LN(c,[[250,102],[350,86]],24);LN(c,[[250,158],[350,174]],24);CI(c,165,130,10)}}),
+T({id:'handsaw',name:'Hand Saw',mat:'Spring steel blade',quote:'My grandfather\'s saw. Teeth are fine, the rest is orange.',
+ shape(c){POLY(c,[[24,104],[286,82],[286,182],[24,132]]);for(let x=26;x<284;x+=9){const y=132+(x-24)/262*50;POLY(c,[[x,y-2],[x+9,y+(9/262)*50-2],[x+4,y+12]])}RR(c,270,68,96,136,34);CUT(c,()=>EL(c,320,134,20,36))},
+ relief(c){CI(c,284,106,6);CI(c,284,160,6);CI(c,296,134,6);c.globalAlpha=.4;RR(c,276,74,84,124,30)}}),
+T({id:'hatchet',name:'Camp Hatchet',mat:'Drop-forged steel',quote:'Split a lot of kindling. Now it needs splitting from the rust.',
+ shape(c){c.beginPath();c.moveTo(150,58);c.lineTo(150,118);c.lineTo(84,150);c.quadraticCurveTo(28,104,58,34);c.closePath();c.fill();RR(c,140,44,54,84,10);LN(c,[[166,86],[340,226]],24);EL(c,346,232,18,14,.7)},
+ relief(c){c.globalAlpha=.6;c.beginPath();c.moveTo(72,46);c.quadraticCurveTo(48,100,90,138);c.lineTo(100,130);c.quadraticCurveTo(66,98,84,48);c.fill();c.globalAlpha=1;LN(c,[[230,136],[330,216]],28)}}),
+T({id:'anvil',name:'Blacksmith Anvil',mat:'Cast steel',quote:'Two hundred pounds of history. Make the face shine.',
+ shape(c){c.beginPath();c.moveTo(14,86);c.quadraticCurveTo(70,64,110,62);c.lineTo(340,62);c.lineTo(346,112);c.lineTo(286,120);c.quadraticCurveTo(250,140,256,168);c.lineTo(310,206);c.lineTo(316,232);c.lineTo(70,232);c.lineTo(76,206);c.lineTo(130,168);c.quadraticCurveTo(136,138,112,118);c.quadraticCurveTo(70,108,14,86);c.fill();CUT(c,()=>c.fillRect(300,68,14,14))},
+ relief(c){c.fillRect(110,62,236,14);c.globalAlpha=.5;c.fillRect(90,210,210,10)}}),
+T({id:'vise',name:'Bench Vise',mat:'Cast iron',quote:'Held every project I ever built. Bolted to the bench since \'71.',
+ shape(c){RR(c,96,206,230,30,6);RR(c,140,120,170,90,10);RR(c,248,64,66,70,6);RR(c,128,64,66,70,6);LN(c,[[36,112],[134,112]],16);LN(c,[[40,56],[40,170]],10);CI(c,40,52,10);CI(c,40,174,10);RR(c,200,150,50,20,4)},
+ relief(c){for(let k=0;k<6;k++){c.fillRect(190,70+k*10,4,6);c.fillRect(244,70+k*10,4,6)}c.globalAlpha=.6;RR(c,150,130,150,30,8)}}),
+T({id:'handdrill',name:'Eggbeater Hand Drill',mat:'Cast iron & steel',quote:'Crank it and it still spins. Just ugly as sin.',
+ shape(c){LN(c,[[34,140],[330,140]],12);POLY(c,[[20,140],[66,124],[66,156]]);LN(c,[[0,140],[24,140]],5);CI(c,200,96,64);CUT(c,()=>CI(c,200,96,48));for(let k=0;k<4;k++)ROT(c,200,96,k*Math.PI/2+.4,()=>c.fillRect(-5,0,10,52));CI(c,200,96,14);LN(c,[[200,96],[254,42]],10);EL(c,262,34,10,18,.7);RR(c,316,116,60,48,22)},
+ relief(c){RING(c,200,96,58,8);CI(c,200,96,8)}}),
+// ===== KITCHEN & CAST IRON =====
+T({id:'dutchoven',name:'Dutch Oven',mat:'Cast iron',oldPaint:null,quote:'Chuckwagon pot. Fed a lot of cowboys.',
+ shape(c){RR(c,64,100,252,126,46);EL(c,190,98,146,24);RR(c,168,58,44,28,10);CI(c,44,132,22);CI(c,336,132,22);CUT(c,()=>{CI(c,44,132,10);CI(c,336,132,10)})},
+ relief(c){EL(c,190,98,146,24);CUT(c,()=>EL(c,190,98,130,16));c.globalAlpha=.5;c.fillRect(70,140,240,8)}}),
+T({id:'waffle',name:'Waffle Iron',mat:'Cast iron',oldPaint:null,quote:'Stovetop waffle iron. Sunday mornings, 1940s style.',
+ shape(c){CI(c,140,130,104);LN(c,[[232,118],[372,104]],14);LN(c,[[232,142],[372,156]],14);RR(c,236,112,24,36,6)},
+ relief(c){c.save();c.beginPath();c.arc(140,130,88,0,6.3);c.clip();for(let y=40;y<230;y+=22)for(let x=50;x<240;x+=22)c.fillRect(x,y,15,15);c.restore();RING(c,140,130,96,10)}}),
+T({id:'cornpan',name:'Corn-Stick Pan',mat:'Cast iron',oldPaint:null,quote:'Seven little ears of corn. Grandma\'s cornbread pan.',
+ shape(c){RR(c,30,66,320,134,10);RR(c,4,112,32,40,10);RR(c,344,112,32,40,10);CUT(c,()=>{CI(c,18,132,7);CI(c,362,132,7)})},
+ relief(c){c.fillRect(30,66,320,134);CUT(c,()=>{for(let k=0;k<7;k++)EL(c,62+k*43,133,17,56)});c.globalAlpha=.55;for(let k=0;k<7;k++)for(let j=0;j<8;j++){CI(c,56+k*43,90+j*12,3);CI(c,68+k*43,96+j*12,3)}}}),
+T({id:'kettle',name:'Tea Kettle',...SHEET,mat:'Enamel steel',quote:'Whistled on the woodstove for forty years.',
+ shape(c){c.beginPath();c.ellipse(208,166,108,74,0,Math.PI*.95,Math.PI*2.05);c.lineTo(310,230);c.lineTo(106,230);c.closePath();c.fill();POLY(c,[[118,170],[40,96],[26,100],[106,206]]);ARC(c,208,140,82,Math.PI*1.12,Math.PI*1.88,14);CI(c,208,90,13);EL(c,208,100,40,10)},
+ relief(c){EL(c,208,104,46,12);c.globalAlpha=.5;c.fillRect(104,212,208,8)}}),
+T({id:'coffeemill',name:'Coffee Mill',mat:'Cast iron hopper',quote:'Hand-crank coffee grinder from the general store.',
+ shape(c){RR(c,118,140,144,100,6);POLY(c,[[96,98],[284,98],[254,144],[126,144]]);RR(c,184,66,12,40,4);LN(c,[[190,66],[326,40]],10);EL(c,334,38,12,20,.4);CI(c,190,66,10)},
+ relief(c){c.globalAlpha=.6;RR(c,136,176,108,48,4);c.globalAlpha=1;CI(c,190,200,8);c.fillRect(96,98,188,8)}}),
+T({id:'meatgrinder',name:'Meat Grinder',mat:'Tinned cast iron',quote:'Clamps to the table. Made a thousand pounds of sausage.',
+ shape(c){POLY(c,[[126,24],[256,24],[218,92],[164,92]]);RR(c,108,86,176,66,30);CI(c,100,119,38);LN(c,[[284,119],[334,119],[334,206]],10);EL(c,334,214,12,20);POLY(c,[[168,148],[214,148],[214,206],[250,206],[250,226],[168,226]]);LN(c,[[232,226],[232,252]],8)},
+ relief(c){CI(c,100,119,38);CUT(c,()=>{CI(c,100,119,4);for(let k=0;k<8;k++){const a=k*Math.PI/4;CI(c,100+Math.cos(a)*18,119+Math.sin(a)*18,5)}});c.fillRect(126,24,130,8)}}),
+T({id:'sadiron',name:'Sad Iron',mat:'Cast iron',oldPaint:null,quote:'Clothes iron you heated on the stove. Heavy as a brick.',
+ shape(c){c.beginPath();c.moveTo(24,206);c.quadraticCurveTo(80,150,140,150);c.lineTo(340,150);c.lineTo(352,206);c.closePath();c.fill();c.save();c.lineWidth=18;c.lineCap='round';c.beginPath();c.moveTo(150,152);c.bezierCurveTo(156,56,296,56,304,152);c.stroke();c.restore();RR(c,176,66,104,22,10)},
+ relief(c){c.fillRect(40,190,310,10)}}),
+T({id:'trivet',name:'Ornate Trivet',mat:'Cast iron',oldPaint:null,quote:'Lacy little trivet. A pain to strip, every hole counts.',
+ shape(c){CI(c,168,130,104);CUT(c,()=>{for(let k=0;k<6;k++)ROT(c,168,130,k*Math.PI/3,()=>EL(c,0,-56,16,30));for(let k=0;k<6;k++)ROT(c,168,130,k*Math.PI/3+Math.PI/6,()=>CI(c,0,-86,8));CI(c,168,130,14)});RR(c,262,118,96,24,12);CUT(c,()=>CI(c,344,130,7))},
+ relief(c){RING(c,168,130,98,10);RING(c,168,130,30,8)}}),
+T({id:'stove',name:'Pot-Belly Stove',mat:'Cast iron',sides:2,quote:'Heated the depot waiting room for sixty winters.',
+ shape(c){RR(c,170,4,40,40,4);RR(c,140,38,100,20,4);EL(c,190,130,98,82);RR(c,128,190,124,28,4);LN(c,[[142,214],[118,252]],12);LN(c,[[238,214],[262,252]],12)},
+ relief(c){RR(c,160,106,60,56,10);c.globalAlpha=.6;c.fillRect(96,92,188,8);c.fillRect(96,176,188,8)}}),
+// ===== FARM & YARD =====
+T({id:'milkcan',name:'Milk Can',...SHEET,mat:'Tinned steel',quote:'Dairy can off the old milk stand by the road.',
+ shape(c){RR(c,148,18,84,24,6);RR(c,162,40,56,42,4);POLY(c,[[162,78],[218,78],[270,120],[110,120]]);RR(c,110,116,160,134,10);CI(c,104,112,15);CI(c,276,112,15);CUT(c,()=>{CI(c,104,112,7);CI(c,276,112,7)})},
+ relief(c){c.fillRect(110,150,160,8);c.fillRect(110,224,160,8)}}),
+T({id:'wheelbarrow',name:'Wheelbarrow',...SHEET,mat:'Steel tray',quote:'Hauled every load of gravel on this place.',
+ shape(c){POLY(c,[[56,64],[304,64],[262,152],[112,152]]);CI(c,80,194,44);CUT(c,()=>CI(c,80,194,14));LN(c,[[80,194],[200,152],[360,118]],10);LN(c,[[262,150],[274,234]],10);RR(c,264,226,30,10,3);LN(c,[[300,112],[372,102]],14)},
+ relief(c){c.fillRect(56,64,248,10);RING(c,80,194,34,10)}}),
+T({id:'pitchfork',name:'Pitchfork',mat:'Forged steel tines',quote:'Four-tine hay fork. Handle\'s new, tines are crusty.',
+ shape(c){LN(c,[[150,130],[372,130]],14);RR(c,124,116,48,28,8);c.save();c.lineWidth=10;c.lineCap='round';c.beginPath();c.moveTo(130,84);c.quadraticCurveTo(118,130,130,176);c.stroke();c.restore();for(const y of [86,116,144,174]){c.save();c.lineWidth=8;c.lineCap='round';c.beginPath();c.moveTo(130,y);c.quadraticCurveTo(70,y+(y-130)*.25,18,y+(y-130)*.1);c.stroke();c.restore()}},
+ relief(c){RR(c,128,120,40,20,8)}}),
+T({id:'shovel',name:'Garden Spade',mat:'Stamped steel',quote:'Dug every fence post on the property.',
+ shape(c){c.beginPath();c.moveTo(136,74);c.lineTo(136,186);c.quadraticCurveTo(60,196,16,130);c.quadraticCurveTo(60,64,136,74);c.fill();LN(c,[[136,130],[320,130]],14);RR(c,318,94,54,72,16);CUT(c,()=>RR(c,330,108,30,44,8))},
+ relief(c){LN(c,[[40,130],[136,130]],10);RR(c,124,112,30,36,6)}}),
+T({id:'plow',name:'Walking Plow',mat:'Moldboard steel',quote:'Horse-drawn plow. Turned this ground in 1910.',
+ shape(c){c.beginPath();c.moveTo(60,204);c.quadraticCurveTo(80,84,224,72);c.lineTo(262,112);c.quadraticCurveTo(152,132,142,212);c.closePath();c.fill();POLY(c,[[24,218],[60,196],[150,206],[162,226],[40,230]]);LN(c,[[220,92],[300,40],[372,40]],16);LN(c,[[150,218],[334,218]],10);LN(c,[[244,92],[262,216]],12)},
+ relief(c){c.globalAlpha=.7;c.beginPath();c.moveTo(80,196);c.quadraticCurveTo(100,100,220,86);c.lineTo(230,96);c.quadraticCurveTo(120,112,100,200);c.fill()}}),
+T({id:'weathervane',name:'Rooster Weathervane',mat:'Sheet iron',quote:'Pointed into the wind on the barn for a century.',
+ shape(c){LN(c,[[34,202],[346,202]],8);POLY(c,[[16,202],[50,186],[50,218]]);POLY(c,[[330,186],[370,182],[370,222],[330,218]]);LN(c,[[190,202],[190,254]],10);EL(c,196,104,62,40);POLY(c,[[240,92],[296,20],[324,44],[318,96],[292,128],[244,126]]);CI(c,146,64,20);POLY(c,[[126,62],[108,70],[126,74]]);POLY(c,[[134,48],[142,30],[152,42],[160,30],[164,48]]);LN(c,[[176,140],[182,202]],7);LN(c,[[206,140],[202,202]],7);POLY(c,[[140,76],[132,96],[150,86]])},
+ relief(c){c.globalAlpha=.6;EL(c,204,110,34,20,-.3);LN(c,[[260,104],[300,40]],6);LN(c,[[276,112],[312,66]],6)}}),
+T({id:'horseshoe',name:'Lucky Horseshoe',mat:'Forged iron',quote:'Found it plowing. Hang it right side up for luck.',
+ shape(c){c.save();c.lineWidth=42;c.beginPath();c.arc(190,124,84,2.15,7.27);c.stroke();c.restore();CUT(c,()=>{for(let k=0;k<8;k++){const a=2.45+k*(4.52/7);CI(c,190+Math.cos(a)*84,124+Math.sin(a)*84,5)}})},
+ relief(c){ARC(c,190,124,84,2.2,7.22,8)}}),
+T({id:'pail',name:'Feed Pail',...SHEET,mat:'Galvanized steel',quote:'Fed the chickens every morning for thirty years.',
+ shape(c){POLY(c,[[100,92],[280,92],[256,244],[124,244]]);RR(c,92,82,196,18,6);ARC(c,190,92,100,Math.PI,Math.PI*2,6);CI(c,96,96,9);CI(c,284,96,9)},
+ relief(c){c.fillRect(104,140,172,6);c.fillRect(116,212,148,6)}}),
+// ===== HOMESTEAD =====
+T({id:'pump',name:'Well Hand Pump',mat:'Cast iron',oldPaint:[40,92,52],quote:'Pitcher pump off the old well. Still primes.',
+ shape(c){RR(c,160,62,62,148,10);EL(c,191,60,42,12);POLY(c,[[162,118],[86,128],[74,150],[98,152],[162,146]]);LN(c,[[222,82],[350,30]],12);CI(c,222,82,10);RR(c,140,206,102,24,4);RR(c,176,228,30,30,3)},
+ relief(c){c.fillRect(160,96,62,6);c.fillRect(160,180,62,6)}}),
+T({id:'lantern',name:'Kerosene Lantern',...SHEET,mat:'Tin-plated steel',quote:'Barn lantern. Lit the milking for decades.',
+ shape(c){RR(c,120,190,140,50,20);RR(c,140,62,100,24,10);RR(c,170,36,40,30,6);ARC(c,190,60,70,Math.PI*1.05,Math.PI*1.95,6);c.save();c.lineWidth=8;for(const [a,b] of [[146,128],[170,164],[210,216],[234,252]]){c.beginPath();c.moveTo(a,86);c.quadraticCurveTo(a<190?a-22:a+22,140,b,190);c.stroke()}c.restore();RR(c,118,132,144,10,4)},
+ relief(c){c.fillRect(120,206,140,6)}}),
+T({id:'lawnchair',name:'Shell-Back Lawn Chair',...SHEET,mat:'Stamped steel',quote:'Mid-century porch chair. Sat on it every summer night.',
+ shape(c){c.beginPath();c.moveTo(96,150);c.lineTo(70,70);for(let k=0;k<6;k++){const a=Math.PI*(1.08+k*.168),b=Math.PI*(1.08+(k+1)*.168);c.quadraticCurveTo(190+Math.cos((a+b)/2)*150,150+Math.sin((a+b)/2)*150,190+Math.cos(b)*124,150+Math.sin(b)*124)}c.lineTo(284,150);c.closePath();c.fill();RR(c,74,146,232,34,10);c.save();c.lineWidth=12;c.lineCap='round';c.beginPath();c.moveTo(100,176);c.quadraticCurveTo(80,232,110,250);c.lineTo(270,250);c.quadraticCurveTo(300,232,280,176);c.stroke();c.restore();CUT(c,()=>{for(let k=0;k<5;k++){const a=Math.PI*(1.17+k*.165);ROT(c,190,150,a,()=>RR(c,40,-5,70,10,5))}})},
+ relief(c){RR(c,74,146,232,12,6);for(let k=0;k<6;k++){const a=Math.PI*(1.08+(k+.5)*.168);ROT(c,190,150,a,()=>c.fillRect(20,-2,100,4))}}}),
+T({id:'grill',name:'Kettle Grill',...SHEET,mat:'Porcelain steel',quote:'Burgers every Fourth of July since \'68.',
+ shape(c){CI(c,190,124,100);RR(c,156,6,68,14,6);RR(c,166,14,10,14,2);RR(c,204,14,10,14,2);LN(c,[[124,200],[94,254]],9);LN(c,[[256,200],[286,254]],9);LN(c,[[190,220],[190,254]],9);RR(c,280,112,40,14,6)},
+ relief(c){c.fillRect(90,120,200,6);for(let k=0;k<3;k++)CI(c,160+k*30,50,6)}}),
+T({id:'lamppost',name:'Street Lamp',mat:'Cast iron',quote:'Gas lamp off Main Street. Wants to shine again.',
+ shape(c){POLY(c,[[140,256],[240,256],[226,214],[154,214]]);RR(c,176,100,28,118,6);POLY(c,[[130,48],[250,48],[226,112],[154,112]]);POLY(c,[[116,50],[264,50],[190,6]]);CI(c,190,8,8);RR(c,150,108,80,12,4);c.save();c.lineWidth=8;c.lineCap='round';c.beginPath();c.moveTo(178,170);c.bezierCurveTo(130,170,120,130,150,128);c.moveTo(202,170);c.bezierCurveTo(250,170,260,130,230,128);c.stroke();c.restore()},
+ relief(c){for(let k=0;k<3;k++)c.fillRect(181+k*7,124,3,88);c.globalAlpha=.6;POLY(c,[[150,58],[230,58],[212,104],[168,104]]);c.globalAlpha=1;c.fillRect(186,48,8,64)}}),
+// ===== MOTORCYCLE =====
+T({id:'handlebars',name:'Ape-Hanger Handlebars',mat:'Chrome steel tube',quote:'Tall bars off a \'60s chopper. Pitted chrome.',
+ shape(c){LN(c,[[34,50],[70,70],[126,164],[254,164],[310,70],[346,50]],14);RR(c,166,150,48,40,6);RR(c,8,36,54,28,12);RR(c,318,36,54,28,12);LN(c,[[70,76],[30,96]],6);LN(c,[[310,76],[350,96]],6)},
+ relief(c){for(let k=0;k<6;k++){c.fillRect(14+k*8,38,3,24);c.fillRect(324+k*8,38,3,24)}}}),
+T({id:'exhaust',name:'Megaphone Exhaust',mat:'Steel pipe',quote:'Loud pipe. Neighbors hated it. Make it pretty.',
+ shape(c){LN(c,[[34,24],[42,118],[92,170],[162,172]],22);POLY(c,[[150,154],[342,140],[372,150],[372,192],[342,202],[150,190]]);RR(c,232,194,26,30,4);CUT(c,()=>CI(c,245,214,6))},
+ relief(c){for(let k=0;k<5;k++)RR(c,186+k*30,156,18,30,6)}}),
+T({id:'sprocket',name:'Rear Sprocket',mat:'Hardened steel',quote:'Forty-tooth sprocket. Chain ate it alive.',
+ shape(c){c.beginPath();for(let k=0;k<40;k++){const a=k/40*6.2832,a2=(k+.5)/40*6.2832;c.lineTo(190+Math.cos(a)*112,130+Math.sin(a)*112);c.lineTo(190+Math.cos(a2)*98,130+Math.sin(a2)*98)}c.closePath();c.fill();CUT(c,()=>{for(let k=0;k<5;k++)ROT(c,190,130,k*1.2566,()=>EL(c,0,-58,18,26));CI(c,190,130,22)})},
+ relief(c){RING(c,190,130,92,6);RING(c,190,130,30,10)}}),
+T({id:'swingarm',name:'Swingarm',mat:'Box-section steel',quote:'Rear swingarm. Mud, rust, and chain lube.',
+ shape(c){LN(c,[[40,84],[330,112]],22);LN(c,[[40,176],[330,148]],22);RR(c,316,92,36,76,12);RR(c,180,110,24,40,4);RR(c,20,70,50,30,6);RR(c,20,160,50,30,6);CUT(c,()=>{RR(c,26,80,36,10,5);RR(c,26,170,36,10,5)});RR(c,240,70,22,34,4)},
+ relief(c){LN(c,[[60,86],[320,112]],6);LN(c,[[60,174],[320,148]],6)}}),
+T({id:'engcover',name:'Engine Side Cover',...ALU,mat:'Cast aluminum',oldPaint:null,quote:'Primary cover. Oily, scratched, and dull.',
+ shape(c){c.beginPath();c.ellipse(170,130,150,96,0,0,6.3);c.fill();CI(c,300,150,62);CUT(c,()=>{for(let k=0;k<10;k++){const a=k/10*6.2832;CI(c,170+Math.cos(a)*138,130+Math.sin(a)*86,5)}})},
+ relief(c){EL(c,150,124,72,46);CUT(c,()=>EL(c,150,124,60,36));CI(c,300,150,40);c.globalAlpha=.5;for(let k=0;k<4;k++)c.fillRect(110,104+k*12,80,5)}}),
+T({id:'sidecar',name:'Sidecar Body',...SHEET,mat:'Body steel',sides:2,quote:'Bullet sidecar. Dad rode me to school in it.',
+ shape(c,s){c.save();FLIP(c,s);c.beginPath();c.moveTo(14,150);c.quadraticCurveTo(30,96,120,92);c.lineTo(300,96);c.quadraticCurveTo(370,104,366,160);c.quadraticCurveTo(360,204,280,206);c.lineTo(110,206);c.quadraticCurveTo(24,200,14,150);c.fill();c.save();c.lineWidth=7;c.beginPath();c.moveTo(150,96);c.lineTo(170,44);c.lineTo(214,44);c.lineTo(222,96);c.stroke();c.restore();c.restore()},
+ relief(c,s){c.save();FLIP(c,s);c.fillRect(30,160,330,6);RR(c,230,104,110,20,8);c.restore()}}),
+T({id:'mirror',name:'Bike Mirror',mat:'Chrome steel',quote:'Round mirror. Glass is fine, the back is a mess.',
+ shape(c){CI(c,112,92,72);LN(c,[[162,138],[240,180],[300,236]],12);RR(c,280,226,74,24,6);CUT(c,()=>CI(c,330,238,6))},
+ relief(c){RING(c,112,92,64,10);CI(c,170,142,10)}}),
+// ===== SIGNS & AMERICANA =====
+T({id:'gassign',name:'Gas Station Sign',...SHEET,mat:'Porcelain steel',quote:'Hung over the pumps on Route 30. Mind the porcelain.',
+ shape(c){CI(c,190,138,112);RR(c,180,4,20,30,4);LN(c,[[120,26],[260,26]],8)},
+ relief(c){RING(c,190,138,100,10);TXT(c,'GAS',190,128,74);c.fillRect(110,178,160,8);for(let k=0;k<3;k++)TXT(c,'★',150+k*40,204,22)}}),
+T({id:'sodasign',name:'Soda Shop Sign',...SHEET,mat:'Embossed tin',quote:'Ice-cold soda sign from the five-and-dime.',
+ shape(c){RR(c,10,52,360,160,20);CUT(c,()=>{CI(c,26,68,5);CI(c,354,68,5);CI(c,26,196,5);CI(c,354,196,5)})},
+ relief(c){c.save();c.lineWidth=7;c.strokeRect(22,64,336,136);c.restore();TXT(c,'ICE COLD',226,104,40);TXT(c,'SODA',226,160,58);RR(c,50,80,26,108,12);RR(c,56,64,14,24,4)}}),
+T({id:'plate',name:'License Plate',...SHEET,mat:'Embossed steel',quote:'1957 plate off a ranch truck. Every letter matters.',
+ shape(c){RR(c,30,62,320,146,14);CUT(c,()=>{EL(c,70,80,10,5);EL(c,310,80,10,5);EL(c,70,190,10,5);EL(c,310,190,10,5)})},
+ relief(c){c.save();c.lineWidth=6;RR(c,36,68,308,134,10);c.restore();CUT(c,()=>RR(c,44,76,292,118,8));TXT(c,'WYOMING',190,96,22);TXT(c,'7·1957',190,152,70)}}),
+T({id:'routeshield',name:'Route 66 Shield',...SHEET,mat:'Stamped steel',quote:'Old highway shield. Get your kicks.',
+ shape(c){c.beginPath();c.moveTo(70,30);c.quadraticCurveTo(130,52,190,26);c.quadraticCurveTo(250,52,310,30);c.quadraticCurveTo(334,120,310,170);c.quadraticCurveTo(260,230,190,252);c.quadraticCurveTo(120,230,70,170);c.quadraticCurveTo(46,120,70,30);c.fill()},
+ relief(c){c.fillRect(70,84,240,6);TXT(c,'ROUTE',190,62,26);TXT(c,'66',190,156,104)}}),
+T({id:'thermometer',name:'Thermometer Sign',...SHEET,mat:'Painted tin',quote:'Hung by the bait shop door. Read 104 once.',
+ shape(c){RR(c,140,12,100,238,26);CUT(c,()=>{CI(c,190,26,5);CI(c,190,236,5)})},
+ relief(c){RR(c,182,44,16,150,8);CI(c,190,200,20);for(let k=0;k<9;k++)c.fillRect(204,52+k*16,k%2?8:16,4);TXT(c,'TEMP',190,232,14)}}),
+T({id:'oilcan',name:'Pump Oiler',...SHEET,mat:'Tinned steel',quote:'Thumb-pump oil can. Lubed every machine in the shop.',
+ shape(c){RR(c,70,140,164,96,22);EL(c,152,142,82,26);RR(c,140,104,24,30,4);POLY(c,[[150,112],[360,36],[364,44],[160,128]]);RR(c,100,96,40,14,6)},
+ relief(c){c.fillRect(70,170,164,6);c.fillRect(70,206,164,6)}}),
+T({id:'gaspump',name:'Vintage Gas Pump',...SHEET,mat:'Sheet steel cabinet',sides:2,quote:'Visible-register pump from a 1950s filling station.',
+ shape(c,s){c.save();FLIP(c,s);RR(c,128,64,124,184,16);CI(c,190,40,34);RR(c,172,62,36,10,3);RR(c,118,236,144,20,4);LN(c,[[252,120],[300,140],[312,220],[282,244]],10);RR(c,252,150,24,40,6);c.restore()},
+ relief(c,s){c.save();FLIP(c,s);RING(c,190,40,26,6);CI(c,190,118,34);CUT(c,()=>CI(c,190,118,26));TXT(c,'GAS',190,186,34);c.restore()}}),
+T({id:'cooler',name:'Soda Chest Cooler',...SHEET,mat:'Embossed steel',sides:2,quote:'Bottle cooler from a country store porch.',
+ shape(c){RR(c,30,82,320,150,14);RR(c,22,64,336,32,10);RR(c,4,140,30,34,8);RR(c,346,140,30,34,8);RR(c,176,96,28,24,4)},
+ relief(c){TXT(c,'DRINK',190,150,40);TXT(c,'COLD SODA',190,196,30);c.fillRect(40,124,300,5)}}),
+T({id:'jukebox',name:'Diner Jukebox',...SHEET,mat:'Chrome & steel',sides:2,quote:'Played the same three songs at the diner for 30 years.',
+ shape(c){c.beginPath();c.moveTo(78,252);c.lineTo(78,116);c.arc(190,116,112,Math.PI,0);c.lineTo(302,252);c.closePath();c.fill()},
+ relief(c){ARC(c,190,116,98,Math.PI,0,10);ARC(c,190,116,76,Math.PI,0,8);RR(c,112,132,156,40,6);for(let k=0;k<7;k++)c.fillRect(118+k*22,190,10,54)}}),
+// ===== CLASSIC CAR =====
+T({id:'grille',name:'Chrome Grille',mat:'Chrome-plated steel',oldPaint:null,quote:'The big toothy grin off a \'54 sedan.',
+ shape(c){RR(c,10,80,360,112,52);CUT(c,()=>RR(c,30,98,320,76,36));for(let k=0;k<9;k++)EL(c,58+k*33,136,12,30);c.fillRect(30,132,320,8)},
+ relief(c){RR(c,10,80,360,16,8)}}),
+T({id:'ornament',name:'Eagle Hood Ornament',mat:'Chrome pot metal',oldPaint:null,quote:'Spread-wing eagle off a big \'50s sedan.',
+ shape(c){for(const sg of [1,-1]){c.save();c.translate(190,0);c.scale(sg,1);c.beginPath();c.moveTo(10,120);c.quadraticCurveTo(80,40,176,30);c.lineTo(150,62);c.lineTo(178,64);c.lineTo(140,92);c.lineTo(166,98);c.lineTo(120,122);c.quadraticCurveTo(60,130,10,150);c.fill();c.restore()}EL(c,190,140,26,50);CI(c,190,84,20);POLY(c,[[190,80],[226,88],[196,98]]);POLY(c,[[176,184],[204,184],[214,210],[166,210]]);RR(c,136,206,108,28,8)},
+ relief(c){for(const sg of [1,-1]){c.save();c.translate(190,0);c.scale(sg,1);for(let k=0;k<3;k++)LN(c,[[30+k*10,130-k*6],[150-k*20,50+k*20]],4);c.restore()}CI(c,196,80,4)}}),
+T({id:'steeringwheel',name:'Steering Wheel',mat:'Steel core',quote:'Banjo steering wheel. Horn ring and all.',
+ shape(c){CI(c,190,130,116);CUT(c,()=>CI(c,190,130,98));for(const a of [Math.PI*.5,Math.PI*1.15,Math.PI*1.85])ROT(c,190,130,a,()=>{c.fillRect(0,-8,100,16)});CI(c,190,130,30);RING(c,190,130,64,6)},
+ relief(c){RING(c,190,130,107,8);CI(c,190,130,18)}}),
+// ===== PIRATE & MARINE =====
+T({id:'anchor',name:'Ship\'s Anchor',mat:'Wrought iron',quote:'Pulled out of the harbor mud. Barnacles included.',
+ shape(c){RING(c,190,26,16,10);LN(c,[[118,60],[262,60]],14);CI(c,112,60,10);CI(c,268,60,10);LN(c,[[190,42],[190,226]],18);ARC(c,190,150,82,.2,Math.PI-.2,16);POLY(c,[[272,134],[300,170],[256,176]]);POLY(c,[[108,134],[80,170],[124,176]]);CI(c,190,232,12)},
+ relief(c){LN(c,[[190,70],[190,220]],6)}}),
+T({id:'cleat',name:'Dock Cleat',mat:'Cast iron',quote:'Tied up every boat on the dock for decades.',
+ shape(c){c.beginPath();c.moveTo(14,154);c.quadraticCurveTo(60,126,190,134);c.quadraticCurveTo(320,126,366,154);c.quadraticCurveTo(320,164,190,162);c.quadraticCurveTo(60,164,14,154);c.fill();POLY(c,[[130,150],[250,150],[232,208],[148,208]]);RR(c,108,204,164,28,8);CUT(c,()=>{CI(c,128,218,6);CI(c,252,218,6)})},
+ relief(c){LN(c,[[40,150],[340,150]],6)}}),
+T({id:'porthole',name:'Brass Porthole',...BRASS,mat:'Cast brass',quote:'Off a scrapped tugboat. Green with age.',
+ shape(c){CI(c,176,130,108);CUT(c,()=>CI(c,176,130,66));RR(c,272,104,70,52,8);for(const a of [-.8,.8,Math.PI])ROT(c,176,130,a,()=>{RR(c,96,-10,40,20,4);RR(c,126,-22,10,44,4)})},
+ relief(c){RING(c,176,130,96,8);for(let k=0;k<12;k++){const a=k/12*6.28;CI(c,176+Math.cos(a)*86,130+Math.sin(a)*86,5)}}}),
+T({id:'shipbell',name:'Ship\'s Bell',...BRASS,mat:'Bronze',quote:'Rang every watch for forty years at sea.',
+ shape(c){c.beginPath();c.moveTo(96,214);c.quadraticCurveTo(128,196,132,120);c.quadraticCurveTo(136,64,190,62);c.quadraticCurveTo(244,64,248,120);c.quadraticCurveTo(252,196,284,214);c.closePath();c.fill();RR(c,86,206,208,22,10);RR(c,166,28,48,40,10);CUT(c,()=>RR(c,178,36,24,20,6));CI(c,190,240,12)},
+ relief(c){c.fillRect(132,104,116,8);c.fillRect(110,190,160,8)}}),
+T({id:'outboard',name:'Outboard Motor',...ALU,mat:'Aluminum castings',oldPaint:null,quote:'Little fishing outboard. Corroded from the lake.',
+ shape(c){RR(c,118,12,148,82,32);RR(c,172,88,40,120,6);POLY(c,[[146,200],[262,200],[250,230],[160,238]]);POLY(c,[[196,236],[226,236],[214,258],[204,258]]);EL(c,124,220,12,32);RR(c,128,212,30,16,4);LN(c,[[120,54],[24,74]],14);RR(c,250,92,46,52,6)},
+ relief(c){c.fillRect(118,62,148,6);RR(c,142,26,90,20,10)}}),
+T({id:'helm',name:'Ship\'s Wheel',mat:'Iron & bronze hub',quote:'The wheel off a lake steamer. Every spoke.',
+ shape(c){CI(c,190,130,84);CUT(c,()=>CI(c,190,130,68));for(let k=0;k<8;k++)ROT(c,190,130,k*Math.PI/4,()=>{c.fillRect(0,-6,104,12);EL(c,112,0,14,9)});CI(c,190,130,26)},
+ relief(c){RING(c,190,130,76,6);CI(c,190,130,14)}}),
+T({id:'divehelmet',name:'Diving Helmet',...COPPER,mat:'Spun copper',quote:'Hard-hat diver\'s helmet. Salvaged from a navy surplus sale.',
+ shape(c){CI(c,190,108,92);RR(c,106,176,168,32,12);POLY(c,[[56,206],[324,206],[346,254],[34,254]]);CI(c,100,116,26);CI(c,280,116,26)},
+ relief(c){RING(c,190,116,46,12);c.fillRect(184,72,12,88);c.fillRect(146,110,88,12);RING(c,100,116,18,6);RING(c,280,116,18,6);for(let k=0;k<8;k++)CI(c,70+k*34,230,5)}}),
+T({id:'cannon',name:'Pirate Cannon',mat:'Cast iron barrel',oldPaint:null,quote:'Dredged off a reef. Yes, it\'s real. Probably.',
+ shape(c){POLY(c,[[34,88],[300,70],[330,78],[330,124],[300,132],[34,112]]);RR(c,20,80,28,40,6);CI(c,346,101,16);POLY(c,[[100,120],[310,120],[310,150],[280,150],[280,176],[100,176]]);CI(c,140,198,42);CI(c,272,198,42);CUT(c,()=>{CI(c,140,198,10);CI(c,272,198,10);CI(c,24,100,6)})},
+ relief(c){for(const x of [80,170,250,300])c.fillRect(x,72,8,58);RING(c,140,198,34,6);RING(c,272,198,34,6)}}),
+T({id:'chest',name:'Treasure Chest',...SHEET,mat:'Iron-strapped steel',sides:2,quote:'Strongbox from a shipwreck dig. Empty. Sadly.',
+ shape(c){RR(c,50,122,280,124,6);c.beginPath();c.moveTo(50,126);c.lineTo(50,92);c.ellipse(190,92,140,52,0,Math.PI,0);c.lineTo(330,126);c.closePath();c.fill();RR(c,20,160,32,30,6);RR(c,328,160,32,30,6)},
+ relief(c){for(const x of [80,280]){c.fillRect(x,40,20,206)}RR(c,164,110,52,56,6);c.fillRect(50,118,280,8);for(let k=0;k<6;k++)CI(c,70+k*48,236,5)}}),
+// ===== STEAMPUNK & RETRO ROBOT =====
+T({id:'tinrobot',name:'Tin Toy Robot',...SHEET,mat:'Lithographed tin',quote:'Wind-up robot from 1958. Still walks, sort of.',
+ shape(c){RR(c,140,14,100,72,8);LN(c,[[190,14],[190,0]],5);RR(c,118,88,144,100,10);RR(c,80,98,38,82,16);RR(c,262,98,38,82,16);RR(c,140,186,40,58,6);RR(c,200,186,40,58,6);RR(c,130,238,58,18,6);RR(c,192,238,58,18,6)},
+ relief(c){CI(c,168,46,12);CI(c,212,46,12);c.fillRect(160,68,60,6);CI(c,190,130,22);CUT(c,()=>CI(c,190,130,14));for(let k=0;k<4;k++)CI(c,134+k*37,172,4)}}),
+T({id:'gear',name:'Brass Spur Gear',...BRASS,mat:'Cast brass',quote:'Big gear out of a mill clock. Teeth like a dragon.',
+ shape(c){for(let k=0;k<16;k++)ROT(c,190,130,k*Math.PI/8,()=>c.fillRect(-13,-122,26,26));CI(c,190,130,100);CUT(c,()=>CI(c,190,130,74));for(let k=0;k<6;k++)ROT(c,190,130,k*Math.PI/3,()=>c.fillRect(-9,0,18,78));CI(c,190,130,30);CUT(c,()=>{CI(c,190,130,12);c.fillRect(185,112,10,8)})},
+ relief(c){RING(c,190,130,92,8);RING(c,190,130,26,6)}}),
+T({id:'gauge',name:'Steam Pressure Gauge',...BRASS,mat:'Brass case',quote:'Off a traction engine boiler. Needle\'s stuck at danger.',
+ shape(c){CI(c,190,112,98);RR(c,176,202,28,36,4);POLY(c,[[166,234],[214,234],[224,246],[214,258],[166,258],[156,246]])},
+ relief(c){RING(c,190,112,88,12);for(let k=0;k<11;k++){const a=Math.PI*.8+k*Math.PI*1.4/10;ROT(c,190,112,a,()=>c.fillRect(60,-2,14,4))}LN(c,[[190,112],[240,70]],6);CI(c,190,112,10);TXT(c,'PSI',190,160,20)}}),
+T({id:'goggles',name:'Aviator Goggles',...BRASS,mat:'Brass & steel',quote:'Airship pilot goggles. Invented a backstory for them.',
+ shape(c){CI(c,120,130,72);CI(c,260,130,72);RR(c,170,116,40,26,8);RR(c,14,110,42,40,8);RR(c,324,110,42,40,8)},
+ relief(c){RING(c,120,130,58,12);RING(c,260,130,58,12);for(let k=0;k<8;k++){const a=k*.785;CI(c,120+Math.cos(a)*66,130+Math.sin(a)*66,4);CI(c,260+Math.cos(a)*66,130+Math.sin(a)*66,4)}}}),
+T({id:'windkey',name:'Giant Wind-Up Key',...BRASS,mat:'Cast brass',quote:'Key from a clockwork carnival ride. Nobody knows which one.',
+ shape(c){CI(c,90,82,58);CI(c,90,178,58);RR(c,70,80,40,100,10);CUT(c,()=>{CI(c,90,82,24);CI(c,90,178,24)});RR(c,140,116,196,28,8);RR(c,126,106,24,48,6);RR(c,320,100,40,60,6)},
+ relief(c){RING(c,90,82,44,6);RING(c,90,178,44,6);c.fillRect(150,124,180,4)}}),
+T({id:'owl',name:'Clockwork Owl',...BRASS,mat:'Riveted brass',quote:'Mechanical owl. Its eyes follow you. Please fix it anyway.',
+ shape(c){EL(c,190,148,92,100);POLY(c,[[112,72],[124,22],[160,62]]);POLY(c,[[268,72],[256,22],[220,62]]);LN(c,[[160,244],[150,258]],8);LN(c,[[220,244],[230,258]],8);EL(c,96,160,22,64,.2);EL(c,284,160,22,64,-.2)},
+ relief(c){RING(c,150,104,30,10);RING(c,230,104,30,10);CI(c,150,104,10);CI(c,230,104,10);POLY(c,[[180,128],[200,128],[190,150]]);for(let k=0;k<4;k++)ARC(c,190,190+k*12,40-k*6,.4,Math.PI-.4,4)}}),
+T({id:'jetpack',name:'Rocket Jetpack',...COPPER,mat:'Copper tanks',quote:'Built it in the barn. Did not fly. Make it look like it could.',
+ shape(c){RR(c,106,26,74,172,36);RR(c,200,26,74,172,36);POLY(c,[[116,196],[170,196],[156,246],[130,246]]);POLY(c,[[210,196],[264,196],[250,246],[224,246]]);RR(c,168,60,44,110,8);POLY(c,[[106,150],[80,190],[106,184]]);POLY(c,[[274,150],[300,190],[274,184]])},
+ relief(c){for(const y of [70,150]){c.fillRect(106,y,74,6);c.fillRect(200,y,74,6)}CI(c,190,110,12)}}),
+T({id:'automaton',name:'Automaton Head',...BRASS,mat:'Riveted brass plate',quote:'Head of a fortune-telling machine. It still blinks.',
+ shape(c){EL(c,190,98,90,92);RR(c,130,148,120,54,22);RR(c,164,196,52,36,6);POLY(c,[[56,258],[90,226],[290,226],[324,258]])},
+ relief(c){RING(c,152,96,20,8);RING(c,228,96,20,8);for(let k=0;k<5;k++)c.fillRect(156+k*15,166,8,22);c.fillRect(186,18,8,60);for(let k=0;k<6;k++)CI(c,120+k*28,236,4)}}),
+T({id:'teslacoil',name:'Tesla Coil',...COPPER,mat:'Copper & steel',quote:'Mad-science prop from a haunted house. Zaps not included.',
+ shape(c){EL(c,190,38,124,30);RR(c,158,60,64,150,10);RR(c,108,206,164,44,8);RR(c,182,56,16,10,2)},
+ relief(c){for(let y=70;y<204;y+=8)c.fillRect(160,y,60,3);EL(c,190,34,96,14)}}),
+T({id:'telescope',name:'Brass Telescope',...BRASS,mat:'Drawn brass tubes',quote:'Captain\'s spyglass on a tripod. Seen some things.',
+ shape(c){ROT(c,190,96,-.28,()=>{RR(c,-170,-20,90,40,8);RR(c,-84,-26,110,52,8);RR(c,22,-32,120,64,8);RR(c,138,-38,40,76,10)});LN(c,[[190,100],[120,252]],8);LN(c,[[190,100],[260,252]],8);LN(c,[[190,100],[190,252]],8)},
+ relief(c){ROT(c,190,96,-.28,()=>{c.fillRect(-90,-22,8,44);c.fillRect(18,-30,8,60);c.fillRect(132,-36,8,72)})}}),
+// ===== ALIEN PARTS =====
+T({id:'ufopanel',name:'UFO Hull Panel',...ALIEN,mat:'Unknown alloy',quote:'Fell in my pasture during the storm. Don\'t tell anyone.',
+ shape(c){POLY(c,[[44,60],[300,28],[370,118],[324,232],[60,242],[10,140]]);CUT(c,()=>{CI(c,120,110,22);CI(c,200,96,22);CI(c,280,96,22)})},
+ relief(c){for(let k=0;k<3;k++){c.save();c.lineWidth=5;c.beginPath();for(let x=40;x<340;x+=6)c.lineTo(x,160+k*24+Math.sin(x*.05+k)*10);c.stroke();c.restore()}[[120,110],[200,96],[280,96]].forEach(([x,y])=>RING(c,x,y,28,6))}}),
+T({id:'raygun',name:'Ray Gun',...ALIEN,mat:'Xeno-chrome',quote:'Found next to the hull panel. Point it AWAY from the house.',
+ shape(c){EL(c,170,100,100,46);RR(c,256,86,70,28,8);EL(c,272,100,9,40);EL(c,298,100,9,34);POLY(c,[[326,92],[366,72],[366,128],[326,108]]);POLY(c,[[120,60],[150,20],[190,58]]);POLY(c,[[120,134],[176,134],[156,244],[102,244]]);ARC(c,196,150,26,0,Math.PI*.9,8)},
+ relief(c){EL(c,170,100,72,26);CUT(c,()=>EL(c,170,100,60,18));c.fillRect(110,170,52,6);c.fillRect(106,196,50,6)}}),
+T({id:'robotarm',name:'Alien Robot Arm',...ALIEN,mat:'Living metal',quote:'It twitched once. Blast it before it twitches again.',
+ shape(c){CI(c,326,56,40);LN(c,[[320,62],[200,132]],30);CI(c,200,132,24);LN(c,[[200,132],[104,98]],24);CI(c,104,98,18);c.save();c.lineWidth=10;c.lineCap='round';for(const [a,b] of [[[40,60],[20,96]],[[34,118],[30,150]],[[70,150],[80,180]]]){c.beginPath();c.moveTo(104,98);c.quadraticCurveTo(a[0],a[1],b[0],b[1]);c.stroke()}c.restore()},
+ relief(c){LN(c,[[300,60],[210,116]],8);LN(c,[[184,124],[120,100]],8);CI(c,326,56,20)}}),
+T({id:'skullhelm',name:'Alien Skull Helmet',...ALIEN,mat:'Bone-alloy',quote:'Way too big for a human head. Way, way too big.',
+ shape(c){EL(c,220,92,150,82,-.25);POLY(c,[[96,110],[220,120],[190,230],[150,246],[120,200]]);CUT(c,()=>{EL(c,140,140,30,16,.6);EL(c,196,156,30,16,-.2)})},
+ relief(c){for(let k=0;k<4;k++)ARC(c,250,96,40+k*24,Math.PI*1.1,Math.PI*1.7,5);c.fillRect(150,210,30,5)}}),
+T({id:'reactor',name:'Glowing Reactor Core',...ALIEN,mat:'Hot exotic matter (cooled)',quote:'It hums at night. The cows love it.',
+ shape(c){RR(c,110,16,160,32,10);RR(c,100,212,180,40,10);for(const x of [120,160,220,260])LN(c,[[x,40],[x,214]],12);CI(c,190,130,62)},
+ relief(c){RING(c,190,130,50,8);RING(c,190,130,30,6);CI(c,190,130,12)}}),
+T({id:'eggpod',name:'Xeno Egg Pod',...ALIEN,mat:'Ribbed bio-metal',quote:'It\'s empty. I checked. Twice.',
+ shape(c){EL(c,190,156,100,96);for(const a of [-.9,-.3,.3,.9])ROT(c,190,90,a,()=>POLY(c,[[-22,0],[22,0],[10,-80],[-10,-80]]));RR(c,110,236,160,20,8)},
+ relief(c){for(let k=-3;k<=3;k++){c.save();c.lineWidth=5;c.beginPath();c.ellipse(190,156,Math.abs(k)*28+4,92,0,k<0?Math.PI*.5:-Math.PI*.5,k<0?Math.PI*1.5:Math.PI*.5);c.stroke();c.restore()}}}),
+T({id:'dish',name:'Alien Antenna Array',...ALIEN,mat:'Resonant alloy',quote:'Picks up a station nobody\'s heard of. In a language nobody speaks.',
+ shape(c){c.beginPath();c.ellipse(150,120,54,112,0,-Math.PI/2,Math.PI/2);c.ellipse(132,120,30,104,0,Math.PI/2,-Math.PI/2,true);c.fill();LN(c,[[196,40],[310,120]],6);LN(c,[[196,200],[310,120]],6);POLY(c,[[300,108],[344,96],[344,144],[300,132]]);LN(c,[[180,120],[240,252]],14);RR(c,200,240,90,16,6);for(const y of [20,60,180,220])LN(c,[[130,y],[96,y-(y<120?14:-14)]],5)},
+ relief(c){LN(c,[[178,30],[178,210]],6)}}),
+T({id:'walkerleg',name:'Tripod Walker Leg',...ALIEN,mat:'Hydraulic xeno-steel',quote:'One leg of something very tall. Where\'s the rest of it?',
+ shape(c){LN(c,[[50,22],[210,92]],30);CI(c,210,92,26);LN(c,[[210,92],[160,226]],22);POLY(c,[[120,226],[200,226],[230,256],[90,256]]);CI(c,50,22,22);LN(c,[[70,46],[180,104]],8)},
+ relief(c){LN(c,[[60,30],[200,88]],8);LN(c,[[205,110],[166,216]],7)}}),
+T({id:'idol',name:'Xeno Idol',...ALIEN,mat:'Unknown metal',quote:'Found it in the crop circle. It was facing my house.',
+ shape(c){EL(c,190,62,54,58);POLY(c,[[150,112],[230,112],[214,212],[166,212]]);LN(c,[[152,124],[124,180],[200,176]],12);LN(c,[[228,124],[256,180],[180,182]],12);RR(c,118,206,144,48,6)},
+ relief(c){EL(c,170,66,18,10,.5);EL(c,210,66,18,10,-.5);c.fillRect(128,222,124,5);c.fillRect(128,236,124,5)}}),
+T({id:'probe',name:'Crashed Space Probe',...ALIEN,mat:'Scorched alloy',quote:'Came down in the north forty. Still beeps.',
+ shape(c){CI(c,190,130,66);for(const a of [-2.4,-.7,.7,2.4])ROT(c,190,130,a,()=>{c.fillRect(60,-3,120,6)});RR(c,20,104,96,52,4);RR(c,264,104,96,52,4);LN(c,[[116,130],[264,130]],8)},
+ relief(c){for(let k=0;k<3;k++){c.fillRect(46+k*24,104,4,52);c.fillRect(290+k*24,104,4,52)}RING(c,190,130,50,6)}})
+);
+
 const TID=id=>JOBS.findIndex(j=>j.id===id);
-// par = 0.9 x measured normal-pace blast time (sim: 200px/s rows + nearest dots)
-const PARS={socket:21,hammer:20,pan:23,mailbox:47,hubcap:23,toolbox:47,fender:43,headlight:23,seat:22,wagon:22,gate:20,bikeframe:21,mower:22,hydrant:21,bumper:20,cylhead:42,bench:21,prop:39,hood:25,door:25,car:45};JOBS.forEach(j=>{if(PARS[j.id])j.par=PARS[j.id]});
+// par = 0.9 x measured normal-pace blast time (parsim.js: 200px/s rows + nearest missed-spot dots, base tools, best media)
+const PARS={wrench:20,rim:41,tank:46,socket:21,hammer:20,pan:21,mailbox:47,hubcap:23,toolbox:45,fender:42,headlight:22,seat:21,wagon:23,gate:20,bikeframe:21,mower:21,hydrant:20,bumper:20,cylhead:40,bench:19,prop:39,hood:24,door:24,car:45,pliers:20,handsaw:21,hatchet:18,anvil:22,vise:21,handdrill:20,dutchoven:21,waffle:21,cornpan:21,kettle:22,coffeemill:20,meatgrinder:21,sadiron:20,trivet:21,stove:42,milkcan:22,wheelbarrow:23,pitchfork:15,shovel:15,plow:20,weathervane:20,horseshoe:21,pail:22,pump:20,lantern:21,lawnchair:24,grill:23,lamppost:21,handlebars:15,exhaust:21,sprocket:21,swingarm:15,engcover:42,sidecar:46,mirror:21,gassign:23,sodasign:25,plate:23,routeshield:24,thermometer:23,oilcan:21,gaspump:48,cooler:49,jukebox:50,grille:20,ornament:21,steeringwheel:19,anchor:20,cleat:21,porthole:21,shipbell:21,outboard:41,helm:21,divehelmet:24,cannon:21,chest:47,tinrobot:24,gear:21,gauge:21,goggles:21,windkey:21,owl:22,jetpack:21,automaton:22,teslacoil:21,telescope:21,ufopanel:24,raygun:22,robotarm:22,skullhelm:23,reactor:24,eggpod:24,dish:23,walkerleg:23,idol:23,probe:23};JOBS.forEach(j=>{if(PARS[j.id])j.par=PARS[j.id]});
 // ---------- auto shading ----------
 function blurF(A,w,h,r){if(r<1)return A;let a=A,b=new Float32Array(A.length);for(let pass=0;pass<2;pass++){for(let y=0;y<h;y++){let s=0;const o=y*w;for(let x=-r;x<=r;x++)s+=a[o+Math.min(w-1,Math.max(0,x))];for(let x=0;x<w;x++){b[o+x]=s/(2*r+1);s+=a[o+Math.min(w-1,x+r+1)]-a[o+Math.max(0,x-r)]}}
  const c=new Float32Array(A.length);for(let x=0;x<w;x++){let s=0;for(let y=-r;y<=r;y++)s+=b[Math.min(h-1,Math.max(0,y))*w+x];for(let y=0;y<h;y++){c[y*w+x]=s/(2*r+1);s+=b[Math.min(h-1,y+r+1)*w+x]-b[Math.max(0,y-r)*w+x]}}a=c}return a}
@@ -219,6 +470,7 @@ function genSide(job,idx,S){
    else if(pn>thr-.02){r*=.62;g*=.6;b*=.6}}
   if(job.grease){const q=fbm(x*.02,y*.02,3,seed+60);if(q>.55){const k=clamp((q-.55)*6);r=lerp(r,32,k);g=lerp(g,26,k);b=lerp(b,20,k)}}
   if(job.under&&y/PH>.58+(n-.5)*.3){const k=.8+.4*d;r=26*k;g=26*k;b=28*k}
+  if(job.alien){const q=r;r=b*.5+g*.25;g=q*.78+d*30;b=q*.42+g*.25}else if(job.tint){const q=fbm(x*.05,y*.05,2,seed+70);if(q>.52){const k=clamp((q-.52)*4);r=lerp(r,58,k);g=lerp(g,128,k);b=lerp(b,98,k)}}
   const m=(.86+hf*.26)*(1-.38*gr);R[i]=r*m;R[i+1]=g*m;R[i+2]=b*m;R[i+3]=255;
   const v=120+(hf-.5)*12+(n-.5)*8;P[i]=v;P[i+1]=v+1;P[i+2]=v-2;P[i+3]=255;}
  const toC=id=>{const c=mk(w,h);c.getContext('2d').putImageData(id,0,0);return c};
@@ -237,6 +489,8 @@ function genMetal(job,sd,dmg){const {w,h,S,al}=sd,id=new ImageData(w,h),D=id.dat
  for(let py=0;py<h;py++)for(let px=0;px<w;px++){const i=(py*w+px)*4;if(al[i+3]<8)continue;const x=px/S,y=py/S,hf=hr();
   let v=(alu?172:146)+(fbm(x*.08,y*.08,2,seed+30)-.5)*22+(hf-.5)*(alu?22:34);
   if(dmg){if(alu){const p=fbm(x*.4,y*.4,2,seed+44);if(p>.6)v*=1-clamp((p-.6)*3)*.55;v-=14+(hf>.9?25:0)}else{const a=fbm(x*.022,y*.022,3,seed+50),b=fbm(x*.022+.25,y*.022+.2,3,seed+50);v*=1+(a-b)*2.4}}
+  if(job.alien){const vein=Math.abs(fbm(x*.025,y*.025,3,seed+80)-.5),hu=fbm(x*.01,y*.01,2,seed+81)*90+235,cc=hsl(hu,.32,.3+(v-146)/420);if(vein<.035){const k=1-vein/.035;D[i]=lerp(cc[0],90,k);D[i+1]=lerp(cc[1],255,k);D[i+2]=lerp(cc[2],190,k)}else{D[i]=cc[0];D[i+1]=cc[1];D[i+2]=cc[2]}D[i+3]=255;continue}
+  if(job.tint==='brass'){D[i]=v*1.18;D[i+1]=v*.96;D[i+2]=v*.52;D[i+3]=255;continue}if(job.tint==='copper'){D[i]=v*1.22;D[i+1]=v*.72;D[i+2]=v*.5;D[i+3]=255;continue}
   D[i]=v-3;D[i+1]=v;D[i+2]=v+4;D[i+3]=255}
  const c=mk(w,h);c.getContext('2d').putImageData(id,0,0);sd.metal=c}
 function genPaint(sd,rgb){const {w,h,S}=sd,c=mk(w,h),x=c.getContext('2d');sd.gloss=typeof rgb==='string'?(FIN_GLOSS[rgb]??.65):.65;
@@ -427,8 +681,22 @@ function drawTitle(dt){ctx.drawImage(BG,0,0,W,H);if(!titleSide){titleSide=genSid
  ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1;ctx.font='900 62px Impact,"Arial Black",system-ui';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.strokeText('BLAST',36,112);
  ctx.fillStyle='#ff8a1f';ctx.fillRect(38,180,250,3);text('SANDBLASTING  SIM',40,200,18,'#ff9a3a','left',800);
  button(40,236,170,50,'▶  PLAY',()=>{G.scr='map'},{sz:20,pulse:true});button(40,296,170,38,'🏁 Garage',()=>{G.scr='garage'},{col:['#4a5563','#2d343d'],sz:15});audioToggles(W-96,10);text('Tap to start',42,350,12,'rgba(255,255,255,.45)','left',500)}
-const NB=['wrench','socket','hammer','pan','rim','mailbox','hubcap','toolbox','fender','headlight','tank','seat','wagon','gate'],BOSS=['bikeframe','mower','hydrant','bumper','cylhead','bench','prop','hood','door','car'],INTRO=[1,2,3,5,7,12,15,18,23,27,33,38,44,51];
-const LEVELS=[];(()=>{let k=0;for(let L=1;L<=100;L++){let id;if(L%10===0)id=BOSS[L/10-1];else{const ii=INTRO.indexOf(L);if(ii>=0){id=NB[ii];k=ii+1}else{hs=L*977+5;hr();const q=1-Math.pow(hr(),2);id=NB[Math.min(k-1,Math.floor(q*k))]}}LEVELS.push({L,t:TID(id),boss:L%10===0})}})();
+const SETS=[
+ {id:'tools',name:'HAND TOOL SET',parts:['wrench','socket','hammer','pliers','hatchet','handsaw','handdrill','vise','anvil','toolbox'],reward:300,unlock:'Gold tool plaque',dec:'plaque'},
+ {id:'kitchen',name:'KITCHEN & CAST IRON SET',parts:['pan','trivet','sadiron','waffle','cornpan','kettle','coffeemill','meatgrinder','dutchoven','stove'],reward:500,unlock:'Vintage diner clock',dec:'clock'},
+ {id:'yard',name:'FARM & YARD SET',parts:['horseshoe','pail','shovel','pitchfork','milkcan','seat','weathervane','wheelbarrow','plow','mower'],reward:650,unlock:'Barn-wood shelves',dec:'shelves'},
+ {id:'home',name:'HOMESTEAD SET',parts:['mailbox','lantern','pump','lamppost','grill','lawnchair','wagon','gate','bench','bikeframe'],reward:800,unlock:'Vintage porch lamps',dec:'lamp'},
+ {id:'moto',name:'MOTORCYCLE SET',parts:['mirror','headlight','handlebars','sprocket','exhaust','swingarm','fender','engcover','tank','sidecar'],reward:950,unlock:'Neon shop sign',dec:'neon'},
+ {id:'signs',name:'SIGNS & AMERICANA SET',parts:['thermometer','plate','oilcan','routeshield','gassign','sodasign','cooler','hydrant','gaspump','jukebox'],reward:1100,unlock:'Edison bulb string',dec:'bulbs'},
+ {id:'steam',name:'STEAMPUNK & ROBOTS SET',parts:['windkey','gauge','goggles','gear','tinrobot','owl','telescope','jetpack','automaton','teslacoil'],reward:1200,unlock:'Brass steam pipes',dec:'pipes'},
+ {id:'marine',name:'PIRATE & MARINE SET',parts:['cleat','porthole','shipbell','anchor','helm','prop','outboard','cannon','chest','divehelmet'],reward:1400,unlock:'Ship\'s wheel & life ring',dec:'wheel'},
+ {id:'alien',name:'??? ALIEN PARTS SET',parts:['raygun','idol','robotarm','reactor','skullhelm','eggpod','dish','walkerleg','probe','ufopanel'],reward:2000,unlock:'Hovering UFO lamp',dec:'ufo'},
+ {id:'car',name:'CLASSIC CAR SET',parts:['ornament','hubcap','steeringwheel','grille','bumper','rim','cylhead','door','hood','car'],reward:3000,unlock:'Checkered showroom floor',dec:'floor'}];
+// career: each of the 100 levels is a unique part, set by set (boss = 10th of each set; L100 = classic car)
+const CAREER=SETS.flatMap(st=>{const raw=(id)=>id==='wrench'?-1:id==='car'?1e3:(PARS[id]||0);return [...st.parts].sort((a,b)=>raw(a)-raw(b)||st.parts.indexOf(a)-st.parts.indexOf(b))});
+const LEVELS=CAREER.map((id,k)=>({L:k+1,t:TID(id),boss:(k+1)%10===0}));
+LEVELS.forEach(l=>{const j=JOBS[l.t];j.pay=j.id==='car'?450:Math.round(l.boss?140+1.8*l.L:76+2.5*l.L)});
+const unlockedPool=()=>[...new Set(LEVELS.slice(0,Math.max(10,curLevel())).map(l=>l.t))];
 function levelJob(L){const lv=LEVELS[L-1],b=JOBS[lv.t];hs=L*31+7;hr();const c=CUST[(hr()*CUST.length)|0];
  return variant(b,L*7919+3,{name:(lv.boss?'★ ':'')+b.name,cust:L<=3&&b.cust!=='Customer'?b.cust:c[0],role:L<=3&&b.role?b.role:c[1],pay:Math.round(b.pay*(1+L*.03)*(lv.boss?2:1)),quote:b.quote||'Make it look new.'})}
 const curLevel=()=>{let i=0;while(i<99&&save.lv[i])i++;return i+1};
@@ -436,8 +704,8 @@ function dayKey(off=0){const d=new Date();d.setDate(d.getDate()+off);return d.ge
 const OLDPAL=[[34,86,150],[150,30,28],[40,92,52],[196,160,40],[92,92,98],[120,60,110],null];
 function variant(base,seed,o){hs=seed*7919+13;hr();const v=Object.assign({},base,{seed:40+(seed%911)},o);if(base.metal!=='alu')v.oldPaint=OLDPAL[(hr()*OLDPAL.length)|0];return v}
 const CUST=[['Marge','antique dealer'],['Tony','hot rod guy'],['Wes','farm mechanic'],['Lena','vintage collector'],['Hank','scrapyard owner'],['Priya','bike restorer']];
-function dailyJob(){const k=dayKey(),n=+k.replace(/-/g,'');hs=n;hr();const i=TID(NB[(hr()*NB.length)|0]),c=CUST[(hr()*CUST.length)|0];return{i,v:variant(JOBS[i],n,{name:'Daily: '+JOBS[i].name,cust:c[0],role:c[1],pay:Math.round(JOBS[i].pay*1.6),quote:"Today only. I need this one turned around fast and I'm paying extra for it."})}}
-function endlessJob(){const seed=(Date.now()%100000)+save.endless*131;hs=seed;hr();const pool=[...new Set(LEVELS.slice(0,Math.max(10,curLevel())).map(l=>l.t))],i=pool[(hr()*pool.length)|0],c=CUST[(hr()*CUST.length)|0],lv=save.endless+1;
+function dailyJob(){const k=dayKey(),n=+k.replace(/-/g,'');hs=n;hr();const pool=unlockedPool(),i=pool[(hr()*pool.length)|0],c=CUST[(hr()*CUST.length)|0];return{i,v:variant(JOBS[i],n,{name:'Daily: '+JOBS[i].name,cust:c[0],role:c[1],pay:Math.round(JOBS[i].pay*1.6),quote:"Today only. I need this one turned around fast and I'm paying extra for it."})}}
+function endlessJob(){const seed=(Date.now()%100000)+save.endless*131;hs=seed;hr();const pool=unlockedPool(),i=pool[(hr()*pool.length)|0],c=CUST[(hr()*CUST.length)|0],lv=save.endless+1;
  return{i,v:variant(JOBS[i],seed,{name:`#${lv} ${JOBS[i].name}`,cust:c[0],role:c[1],pay:Math.round(JOBS[i].pay*(1+lv*.08)),par:Math.max(Math.round(JOBS[i].par*.65),Math.round(JOBS[i].par*(1-Math.min(.35,lv*.02)))),quote:'Found this rough one. Blast it, coat it, and make me proud.'})}}
 const careerDone=()=>!!save.lv[99],endlessOpen=()=>!!save.lv[9];
 function countdown(){const d=new Date(),m=new Date(d);m.setHours(24,0,0,0);const t=Math.max(0,(m-d)/1000|0);return[t/3600|0,(t/60|0)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':')}
@@ -466,11 +734,6 @@ function drawMap(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.45)';ctx
  text(ok?`Completed: ${save.endless}`:'Beat level 10',ex+14,y+58,12,'#9aa3ad','left',600);text(ok?'Pay rises, par tightens':'to unlock',ex+14,y+76,11,'#778','left',500);
  button(ex+150,y+30,76,36,ok?'Go ▶':'🔒',()=>{const e=endlessJob();startJob(e.i,e.v,'endless')},{dis:!ok,sz:13,col:['#3a8ee0','#1f5ea8']})}
 // ---------- garage ----------
-const SETS=[{id:'tools',name:'HAND TOOL SET',parts:['wrench','socket','hammer','toolbox'],reward:300,unlock:'Gold tool plaque'},
- {id:'moto',name:'MOTORCYCLE SET',parts:['tank','fender','headlight','rim','bikeframe'],reward:800,unlock:'Neon shop sign'},
- {id:'home',name:'HOMESTEAD SET',parts:['pan','mailbox','gate','wagon','bench'],reward:900,unlock:'Vintage porch lamp'},
- {id:'yard',name:'FARM & YARD SET',parts:['seat','mower','hydrant','prop'],reward:1000,unlock:'Barn-wood shelves'},
- {id:'car',name:'CLASSIC CAR SET',parts:['hubcap','bumper','cylhead','hood','door','car'],reward:2500,unlock:'Checkered floor'}];
 let GBG=null;function genGarageBG(){const S=2,b=mk(W*S,H*S),x=b.getContext('2d');x.scale(S,S);
  let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#4a3a2c');g.addColorStop(1,'#2a2019');x.fillStyle=g;x.fillRect(0,0,W,H);
  for(let yy=0;yy<H;yy+=14)for(let xx=(yy/14%2)*7;xx<W;xx+=14){x.fillStyle='rgba(0,0,0,.45)';x.beginPath();x.arc(xx,yy,1.6,0,7);x.fill();x.fillStyle='rgba(255,220,180,.06)';x.beginPath();x.arc(xx+.6,yy+.8,1.6,0,7);x.fill()}
@@ -483,23 +746,50 @@ let GBG=null;function genGarageBG(){const S=2,b=mk(W*S,H*S),x=b.getContext('2d')
 const gCache={};function garagePart(id){const e=save.garage[id];if(!e)return null;const key=id+JSON.stringify(e);if(!gCache[key]){const base=JOBS.find(j=>j.id===id),jb=Object.assign({},base,{seed:e.seed,oldPaint:e.oldPaint});const sd=genSide(jb,0,1);if(e.dmg)genMetal(jb,sd,true);genPaint(sd,e.color&&e.color[1]);sd.done=true;compose(sd,'final',1);gCache[key]=sd}return gCache[key]}
 function silhouette(i){const sd=thumb(i);if(!sd.sil){const c=mk(sd.w,sd.h),x=c.getContext('2d');x.fillStyle='rgba(10,8,6,.7)';x.fillRect(0,0,sd.w,sd.h);x.globalCompositeOperation='destination-in';x.drawImage(sd.shape,0,0);sd.sil=c}return sd.sil}
 const setOwnedReal=st=>st.parts.every(id=>save.garage[id]);
+const decOn=d=>{const st=SETS.find(q=>q.dec===d);return st&&save.sets[st.id]};
+function drawDecor(d,cx,cy,sc,lit){ctx.save();ctx.translate(cx,cy);ctx.scale(sc,sc);if(!lit)ctx.globalAlpha=.22;const T2=G.t;
+ const gold=()=>{const g=ctx.createLinearGradient(0,-20,0,20);g.addColorStop(0,'#f6d77a');g.addColorStop(1,'#a4761a');return g};
+ switch(d){
+ case'plaque':ctx.fillStyle='#4a2f18';rr(-64,-36,128,72,8);ctx.fill();ctx.fillStyle=gold();rr(-54,-26,108,52,5);ctx.fill();text('MASTER',0,-8,12,'#4a3208','center',900);text('TOOL RESTORER',0,10,9,'#4a3208','center',900);break;
+ case'clock':{ctx.fillStyle='#b8241c';ctx.beginPath();ctx.arc(0,0,44,0,7);ctx.fill();ctx.fillStyle='#f4ead2';ctx.beginPath();ctx.arc(0,0,36,0,7);ctx.fill();ctx.fillStyle='#222';for(let k=0;k<12;k++){ctx.save();ctx.rotate(k*Math.PI/6);ctx.fillRect(-1.5,-33,3,k%3?5:9);ctx.restore()}const d=new Date();ctx.strokeStyle='#222';ctx.lineCap='round';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);const ha=(d.getHours()%12+d.getMinutes()/60)*Math.PI/6;ctx.lineTo(Math.sin(ha)*18,-Math.cos(ha)*18);ctx.stroke();ctx.lineWidth=2.5;const ma=d.getMinutes()*Math.PI/30;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(ma)*28,-Math.cos(ma)*28);ctx.stroke();ctx.strokeStyle='#c22';ctx.lineWidth=1;const sa=d.getSeconds()*Math.PI/30;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(sa)*30,-Math.cos(sa)*30);ctx.stroke();text('EAT',0,14,8,'#b8241c','center',900);break}
+ case'shelves':for(let k=0;k<3;k++){const g=ctx.createLinearGradient(0,-30+k*24,0,-14+k*24);g.addColorStop(0,'#9a7a58');g.addColorStop(1,'#5a4128');ctx.fillStyle=g;ctx.fillRect(-60,-32+k*24,120,16);ctx.fillStyle='rgba(30,18,8,.6)';for(let n=0;n<4;n++)ctx.fillRect(-50+n*34+k*6,-30+k*24,2,12);ctx.fillStyle='#333';ctx.beginPath();ctx.arc(-50,-24+k*24,2,0,7);ctx.arc(50,-24+k*24,2,0,7);ctx.fill()}break;
+ case'lamp':{if(lit){const g=ctx.createRadialGradient(0,0,4,0,0,70);g.addColorStop(0,'rgba(255,200,120,.55)');g.addColorStop(1,'rgba(255,200,120,0)');ctx.fillStyle=g;ctx.fillRect(-70,-70,140,140)}ctx.fillStyle='#2a2a2a';ctx.fillRect(-4,-40,8,22);ctx.beginPath();ctx.moveTo(-24,-18);ctx.lineTo(24,-18);ctx.lineTo(16,22);ctx.lineTo(-16,22);ctx.closePath();ctx.fill();ctx.fillStyle=lit?'#ffd890':'#665';ctx.fillRect(-12,-12,24,30);ctx.fillStyle='#2a2a2a';ctx.fillRect(-1.5,-12,3,30);ctx.fillRect(-12,2,24,3);ctx.beginPath();ctx.moveTo(-28,-18);ctx.lineTo(0,-34);ctx.lineTo(28,-18);ctx.fill();break}
+ case'neon':{const f=lit?.85+.15*Math.sin(T2*3):1;ctx.globalAlpha*=f;ctx.shadowColor='#ff5a2a';ctx.shadowBlur=lit?18:0;ctx.font='900 19px Impact,"Arial Black",system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#ffb08a';ctx.lineWidth=2;ctx.strokeText('BLAST &',0,-12);ctx.strokeText('RESTORE',0,12);break}
+ case'bulbs':{ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-66,-20);ctx.quadraticCurveTo(0,10,66,-20);ctx.stroke();for(let k=0;k<6;k++){const x=-55+k*22,y=-20+30*(1-Math.pow((x)/66,2))*.5;ctx.fillStyle='#333';ctx.fillRect(x-3,y,6,7);if(lit){ctx.shadowColor='#ffb347';ctx.shadowBlur=12}ctx.fillStyle=lit?`rgba(255,${190+20*Math.sin(T2*5+k)|0},110,1)`:'#776';ctx.beginPath();ctx.ellipse(x,y+14,6,8,0,0,7);ctx.fill();ctx.shadowBlur=0}break}
+ case'pipes':{const g=ctx.createLinearGradient(0,-8,0,8);g.addColorStop(0,'#f0c66a');g.addColorStop(.5,'#b8862a');g.addColorStop(1,'#6e4d14');ctx.fillStyle=g;ctx.fillRect(-66,-6,132,12);ctx.save();ctx.translate(-40,0);ctx.rotate(Math.PI/2);ctx.fillStyle=g;ctx.fillRect(-36,-6,72,12);ctx.restore();ctx.fillStyle='#8a6a2a';ctx.beginPath();ctx.arc(26,0,20,0,7);ctx.fill();ctx.fillStyle='#f4ead2';ctx.beginPath();ctx.arc(26,0,15,0,7);ctx.fill();ctx.strokeStyle='#c22';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(26,0);const a=lit?Math.sin(T2*2)*.6+.3:0;ctx.lineTo(26+Math.cos(a-1.6)*12,Math.sin(a-1.6)*12);ctx.stroke();if(lit){ctx.fillStyle='rgba(255,255,255,.25)';for(let k=0;k<3;k++){const t=(T2*.6+k/3)%1;ctx.beginPath();ctx.arc(-40+Math.sin(t*9)*4,-36-t*30,4+t*8,0,7);ctx.fill()}}break}
+ case'wheel':{ctx.strokeStyle='#e8e2d6';ctx.lineWidth=11;ctx.beginPath();ctx.arc(-28,0,26,0,7);ctx.stroke();ctx.strokeStyle='#d33';ctx.setLineDash([10,10]);ctx.beginPath();ctx.arc(-28,0,26,0,7);ctx.stroke();ctx.setLineDash([]);ctx.save();ctx.translate(30,0);ctx.rotate(lit?Math.sin(T2*.8)*.3:0);ctx.strokeStyle='#7a4a22';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,24,0,7);ctx.stroke();for(let k=0;k<8;k++){ctx.save();ctx.rotate(k*Math.PI/4);ctx.fillStyle='#7a4a22';ctx.fillRect(-2,0,4,36);ctx.restore()}ctx.fillStyle='#b8862a';ctx.beginPath();ctx.arc(0,0,7,0,7);ctx.fill();ctx.restore();break}
+ case'ufo':{const b=lit?Math.sin(T2*2)*5:0;if(lit){const g=ctx.createLinearGradient(0,0,0,50);g.addColorStop(0,'rgba(120,255,170,.5)');g.addColorStop(1,'rgba(120,255,170,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-14,b+6);ctx.lineTo(14,b+6);ctx.lineTo(34,50);ctx.lineTo(-34,50);ctx.fill()}ctx.fillStyle='#9fd8ff';ctx.beginPath();ctx.ellipse(0,b-8,18,14,0,Math.PI,0);ctx.fill();const g2=ctx.createLinearGradient(0,b-8,0,b+8);g2.addColorStop(0,'#dfe6ee');g2.addColorStop(1,'#6a7480');ctx.fillStyle=g2;ctx.beginPath();ctx.ellipse(0,b,50,11,0,0,7);ctx.fill();for(let k=0;k<5;k++){ctx.fillStyle=lit&&((T2*4+k)|0)%2?'#7dffb0':'#3a5';ctx.beginPath();ctx.arc(-32+k*16,b+2,3,0,7);ctx.fill()}break}
+ case'floor':{for(let r=0;r<4;r++)for(let k=-5;k<5;k++){const y0=-24+r*12,y1=y0+12,w0=10+r*2,w1=w0+2;ctx.fillStyle=(k+r)%2?'#111':'#eee';ctx.beginPath();ctx.moveTo(k*w0,y0);ctx.lineTo((k+1)*w0,y0);ctx.lineTo((k+1)*w1,y1);ctx.lineTo(k*w1,y1);ctx.fill()}break}}
+ ctx.restore()}
 function drawGarage(dt){if(!GBG)GBG=genGarageBG();ctx.drawImage(GBG,0,0,W,H);
- if(save.sets.moto){ctx.save();const f=.85+.15*Math.sin(G.t*3)*(Math.random()<.03?0:1);ctx.globalAlpha=f;ctx.shadowColor='#ff5a2a';ctx.shadowBlur=22;ctx.font='900 22px Impact,"Arial Black",system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#ffb08a';ctx.lineWidth=2;ctx.strokeText('BLAST & RESTORE',W/2+40,26);ctx.fillStyle='rgba(255,120,80,.35)';ctx.fillText('BLAST & RESTORE',W/2+40,26);ctx.restore()}
+ // ambient rewards on every page
+ if(decOn('floor')){ctx.save();ctx.globalAlpha=.35;for(let x=0;x<W;x+=24){ctx.fillStyle=((x/24)|0)%2?'#111':'#eee';ctx.fillRect(x,352,24,24);ctx.fillStyle=((x/24)|0)%2?'#eee':'#111';ctx.fillRect(x,376,24,24)}ctx.restore()}
+ if(decOn('lamp')){ctx.save();ctx.globalCompositeOperation='lighter';for(const lx of [14,W-14]){const g=ctx.createRadialGradient(lx,120,4,lx,120,160);g.addColorStop(0,'rgba(255,190,110,.22)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(lx-160,0,320,300)}ctx.restore()}
+ if(decOn('neon'))drawDecor('neon',W/2+99,26,.55,true);
+ if(decOn('bulbs')){for(let k=0;k<16;k++){const x=20+k*52,y=46+Math.sin(k*1.3)*2;ctx.save();ctx.shadowColor='#ffb347';ctx.shadowBlur=8;ctx.fillStyle=`rgba(255,${200+20*Math.sin(G.t*4+k)|0},120,.9)`;ctx.beginPath();ctx.ellipse(x,y,2.5,3.5,0,0,7);ctx.fill();ctx.restore()}}
  text('GARAGE',24,26,22,'#fff','left',900);text(`${save.restored} restored`,128,27,12,'#cba','left',600);cashPill();
  button(W-262,10,100,30,'◀ Jobs',()=>{G.scr='map'},{col:['#4a5563','#2d343d'],sz:13});
- const gp=G.gpage||0;button(300,10,34,30,'◀',()=>{G.gpage=Math.max(0,gp-1)},{col:['#4a5563','#2d343d'],dis:gp===0});button(338,10,34,30,'▶',()=>{G.gpage=Math.min(2,gp+1)},{col:['#4a5563','#2d343d'],dis:gp===2});text(`${gp+1}/3`,380,26,11,'#cba','left',700);
- SETS.slice(gp*2,gp*2+2).forEach((st,r)=>{const sy=r?344:184,ly=sy-128;const own=st.parts.filter(id=>save.garage[id]).length,real=setOwnedReal(st),claimed=save.sets[st.id];
-  ctx.save();ctx.fillStyle='rgba(0,0,0,.45)';rr(24,ly-8,260,22,6);ctx.fill();ctx.restore();text(st.name,34,ly+3,12,real?'#ffd36a':'#e8d8c4','left',900);text(`${own}/${st.parts.length}`,240,ly+3,11,'#cba','left',700);
-  if(real){if(!claimed)button(W-230,ly-10,206,26,`Set bonus: claim $${st.reward}`,()=>{save.sets[st.id]=1;save.cash+=st.reward;persist();cash();buzz([20,30,20]);toast(`${st.name} bonus! Unlocked: ${st.unlock}`)},{pulse:true,sz:12,col:['#e8b53a','#a8780e']});
-   else text('★ CLAIMED: '+st.unlock,W-24,ly+3,11,'#ffd36a','right',800)}else text(`Complete for $${st.reward} + ${st.unlock}`,W-24,ly+3,10,'#a99','right',600);
-  const slotW=(W-60)/Math.max(4,st.parts.length);
-  st.parts.forEach((id,k)=>{const cx=40+k*slotW+slotW/2,bw=slotW-16,bh=104,by=sy-bh-2,i=TID(id),sd=garagePart(id),sc=Math.min(bw/PW,bh/PH),dw=PW*sc,dh=PH*sc;
-    if(sd){ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(cx,by+bh/2,4,cx,by+bh/2,bw*.7);g.addColorStop(0,'rgba(255,220,170,.16)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(cx-bw,by-20,bw*2,bh+30);ctx.restore();
-     ctx.drawImage(sd.shadow,cx-dw/2-40*sc,by+bh-dh-40*sc+8,(PW+80)*sc,(PH+80)*sc);ctx.drawImage(sd.comp,cx-dw/2,by+bh-dh,dw,dh);
-     const e=save.garage[id];ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-56,sy+2,112,12,3);ctx.fill();text(((e.color?e.color[0]:'')+' '+JOBS[i].name.split(' ').pop()).slice(0,24),cx,sy+8.5,8,'#e9d6b8','center',700)}
-    else{ctx.drawImage(silhouette(i),cx-dw/2,by+bh-dh,dw,dh);text('?',cx,by+bh-dh/2,24,'rgba(255,255,255,.25)','center',900);ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-56,sy+2,112,12,3);ctx.fill();text(JOBS[i].name.slice(0,22),cx,sy+8.5,8,'#a99','center',700)}})});
- if(save.sets.tools){ctx.save();const g=ctx.createLinearGradient(0,368,0,392);g.addColorStop(0,'#f6d77a');g.addColorStop(1,'#a4761a');ctx.fillStyle=g;rr(W/2-90,366,180,26,5);ctx.fill();ctx.restore();text('MASTER TOOL RESTORER',W/2,379,11,'#4a3208','center',900)}
- else text('Restore parts to fill the shelves. Complete a set for a bonus.',W/2,380,12,'rgba(255,230,200,.55)','center',500)}
+ const NP=SETS.length+1,gp=Math.min(NP-1,G.gpage||0);button(226,10,34,30,'◀',()=>{G.gpage=Math.max(0,gp-1)},{col:['#4a5563','#2d343d'],dis:gp===0});button(264,10,34,30,'▶',()=>{G.gpage=Math.min(NP-1,gp+1)},{col:['#4a5563','#2d343d'],dis:gp===NP-1});
+ for(let k=0;k<NP;k++){const st=SETS[k-1],done=st&&save.sets[st.id],x=310+k*14;ctx.fillStyle=k===gp?'#ffb347':done?'#ffd36a':'rgba(255,255,255,.25)';ctx.beginPath();ctx.arc(x,25,k===gp?5:3.5,0,7);ctx.fill();buttons.push({x:x-7,y:12,w:14,h:26,fn:()=>{G.gpage=k}})}
+ if(gp===0){ // trophy wall
+  text('TROPHY WALL',W/2,62,15,'#ffd36a','center',900);text('Complete a set to earn its garage upgrade.',W/2,80,11,'#cba','center',600);
+  SETS.forEach((st,k)=>{const x=24+(k%5)*156,y=94+((k/5)|0)*146,w=148,h=138,on=!!save.sets[st.id],n=st.parts.filter(id=>save.garage[id]).length;
+   ctx.save();ctx.fillStyle=on?'rgba(40,28,14,.75)':'rgba(0,0,0,.45)';rr(x,y,w,h,10);ctx.fill();if(on){ctx.strokeStyle='rgba(255,211,106,.6)';ctx.lineWidth=1.5;rr(x,y,w,h,10);ctx.stroke()}ctx.restore();
+   drawDecor(st.dec,x+w/2,y+56,.9,on);ctx.save();ctx.beginPath();ctx.rect(x+4,y,w-8,h);ctx.clip();text(on?st.unlock:'🔒 '+st.unlock,x+w/2,y+h-30,10,on?'#ffd36a':'#a99','center',800);ctx.restore();
+   text(st.name.replace(' SET','').replace('??? ',''),x+w/2,y+h-14,9,'#e8d8c4','center',700);ctx.fillStyle='rgba(255,255,255,.12)';rr(x+14,y+h-8,w-28,4,2);ctx.fill();ctx.fillStyle='#ffb347';rr(x+14,y+h-8,(w-28)*n/st.parts.length,4,2);ctx.fill();buttons.push({x,y,w,h,fn:()=>{G.gpage=k+1}})});
+  return}
+ const st=SETS[gp-1],own=st.parts.filter(id=>save.garage[id]).length,real=setOwnedReal(st),claimed=save.sets[st.id],paid=(save.legacySets||{})[st.id]||0,rw=Math.max(0,st.reward-paid),ly=60;
+ ctx.save();ctx.fillStyle='rgba(0,0,0,.5)';rr(24,ly-12,340,26,6);ctx.fill();ctx.restore();text(st.name,34,ly+1,13,real?'#ffd36a':'#e8d8c4','left',900);text(`${own}/${st.parts.length}`,330,ly+1,12,'#cba','left',800);
+ if(real){if(!claimed)button(W-262,ly-13,238,28,rw?`Set bonus: claim $${rw}`:'Claim set reward',()=>{save.sets[st.id]=1;save.cash+=rw;persist();cash();buzz([20,30,20]);toast(`${st.name} bonus! Unlocked: ${st.unlock}`)},{pulse:true,sz:12,col:['#e8b53a','#a8780e']});
+  else text('★ '+st.unlock,W-24,ly+1,11,'#ffd36a','right',800)}else text(`Complete for $${rw} + ${st.unlock}`,W-24,ly+1,10,'#a99','right',600);
+ if(decOn('shelves'))for(const sy of [184,344]){const g=ctx.createLinearGradient(0,sy,0,sy+14);g.addColorStop(0,'#a8845e');g.addColorStop(1,'#5e4229');ctx.fillStyle=g;ctx.fillRect(16,sy,W-32,14);ctx.fillStyle='rgba(40,22,10,.55)';for(let x=40;x<W-20;x+=96)ctx.fillRect(x,sy+1,2,12);ctx.fillStyle='#2a2a2a';for(let x=60;x<W-20;x+=192){ctx.beginPath();ctx.arc(x,sy+7,1.8,0,7);ctx.fill()}}
+ const per=Math.ceil(st.parts.length/2),slotW=(W-48)/per;
+ st.parts.forEach((id,k)=>{const r=(k/per)|0,c=k%per,sy=r?344:184,cx=24+c*slotW+slotW/2,bw=slotW-12,bh=r?118:96,by=sy-bh-2,i=TID(id);if(i<0)return;const sd=garagePart(id),sc=Math.min(bw/PW,bh/PH),dw=PW*sc,dh=PH*sc;
+   if(sd){ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(cx,by+bh/2,4,cx,by+bh/2,bw*.7);g.addColorStop(0,'rgba(255,220,170,.16)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(cx-bw,by-20,bw*2,bh+30);ctx.restore();
+    ctx.drawImage(sd.shadow,cx-dw/2-40*sc,by+bh-dh-40*sc+8,(PW+80)*sc,(PH+80)*sc);ctx.drawImage(sd.comp,cx-dw/2,by+bh-dh,dw,dh)}
+   else{ctx.drawImage(silhouette(i),cx-dw/2,by+bh-dh,dw,dh);text('?',cx,by+bh-dh/2,22,'rgba(255,255,255,.25)','center',900)}
+   ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-slotW/2+4,sy+2,slotW-8,12,3);ctx.fill();ctx.save();ctx.beginPath();ctx.rect(cx-slotW/2+6,sy,slotW-12,16);ctx.clip();text(sd?JOBS[i].name:'L'+(LEVELS.findIndex(l=>l.t===i)+1)+' · ???',cx,sy+8.5,8,sd?'#e9d6b8':'#a99','center',700);ctx.restore()});
+ if(decOn('plaque'))drawDecor('plaque',W/2,384,.32,true);else text('Restore parts to fill the shelves. Complete a set for a bonus.',W/2,384,11,'rgba(255,230,200,.55)','center',500)}
 function drawShop(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H);text('TOOL SHOP',24,26,22,'#fff','left',900);text('Permanent upgrades. Bought with job earnings only.',170,27,13,'#aab','left',500);cashPill();button(404,360,150,30,'↺ Restore Purchases',()=>Monetize.restore(),{col:['#555c70','#33394a'],sz:12});button(224,360,170,30,'🛒 Finish Store',()=>{G.store={menu:true}},{col:['#6a4ad0','#3f2a90'],sz:12});if(!save.noAds)button(24,360,190,30,'Remove Ads · '+PRODUCTS.remove_ads.price+(NATIVE?'':' (mock)'),()=>Monetize.buyRemoveAds(),{col:['#6a4ad0','#3f2a90'],sz:12});else text('Ads removed ✓',30,375,12,'#9fdca9','left',700);
  button(W-262,10,100,30,'◀ Jobs',()=>{G.scr='map'},{col:['#4a5563','#2d343d'],sz:13});
  drawUpgrades()}
