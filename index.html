@@ -370,11 +370,11 @@ function finishJob(){let st=3;const notes=[];if(J.dmg){st--;notes.push('−1★ 
 // ---------- input ----------
 function lp(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
 cv.addEventListener('pointerdown',e=>{initAudio();if(AC&&AC.state==='suspended')AC.resume();const p=lp(e);pointer.touch=e.pointerType==='touch';pointer.seen=true;
- for(let i=buttons.length-1;i>=0;i--){const b=buttons[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){b.fn(p);return}}
+ for(let i=buttons.length-1;i>=0;i--){const b=buttons[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){b.fn(p);if(b.drag){pointer.drag=b.fn;pointer.down=false;try{cv.setPointerCapture(e.pointerId)}catch(_){}}return}}
  if(G.scr==='title'){G.scr='map';click();return}
  pointer.down=true;pointer.x=p.x;pointer.y=p.y;try{cv.setPointerCapture(e.pointerId)}catch(_){}});
-cv.addEventListener('pointermove',e=>{const p=lp(e);pointer.x=p.x;pointer.y=p.y;pointer.seen=true;pointer.touch=e.pointerType==='touch'});
-const up=()=>{pointer.down=false};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('pointermove',e=>{const p=lp(e);if(pointer.drag){e.preventDefault();pointer.drag(p)}pointer.x=p.x;pointer.y=p.y;pointer.seen=true;pointer.touch=e.pointerType==='touch'});
+const up=()=>{pointer.down=false;pointer.drag=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 // ---------- drawing helpers ----------
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h)}
 function panel(x,y,w,h,a=.72){ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=14;rr(x,y,w,h,10);const g=ctx.createLinearGradient(0,y,0,y+h);g.addColorStop(0,`rgba(34,38,44,${a})`);g.addColorStop(1,`rgba(16,18,22,${a})`);ctx.fillStyle=g;ctx.fill();ctx.restore();rr(x+.5,y+.5,w-1,h-1,10);ctx.strokeStyle='rgba(255,255,255,.09)';ctx.stroke()}
@@ -561,8 +561,8 @@ function drawPicker(){const x0=222,y0=190;panel(x0,y0,590,206,.95);text('PAINT',
  const mid=hsl(pk.h,.85,.5).map(Math.round);g=ctx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,'#111');g.addColorStop(.5,`rgb(${mid})`);g.addColorStop(1,'#fafafa');ctx.fillStyle=g;rr(bx,y0+52,bw,16,8);ctx.fill();
  const kn=(x,y)=>{ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.stroke()};if(!pk.fin&&!pk.fav){kn(bx+pk.h/360*bw,y0+36);kn(bx+pk.v*bw,y0+60)}
  const hb={x:bx-6,y:y0+24,w:bw+12,h:24},vb={x:bx-6,y:y0+48,w:bw+12,h:24};
- buttons.push({...hb,fn:p=>{pk.h=clamp((p.x-bx)/bw)*360;pk.fin=pk.fav=null}},{...vb,fn:p=>{pk.v=clamp((p.x-bx)/bw);pk.fin=pk.fav=null}});
- if(pointer.down){if(pointer.y>=hb.y&&pointer.y<=hb.y+hb.h&&pointer.x>hb.x&&pointer.x<hb.x+hb.w){pk.h=clamp((pointer.x-bx)/bw)*360;pk.fin=pk.fav=null}if(pointer.y>=vb.y&&pointer.y<=vb.y+vb.h&&pointer.x>vb.x&&pointer.x<vb.x+vb.w){pk.v=clamp((pointer.x-bx)/bw);pk.fin=pk.fav=null}}
+ buttons.push({...hb,drag:true,fn:p=>{pk.h=clamp((p.x-bx)/bw)*360;pk.fin=pk.fav=null}},{...vb,drag:true,fn:p=>{pk.v=clamp((p.x-bx)/bw);pk.fin=pk.fav=null}});
+
  const cur=pkCur(),px=x0+334;swatchOf(cur[1],px,y0+26,58,44);text(cur[0],px+68,y0+36,12,'#fff','left',800);
  button(px+68,y0+46,118,26,'Spray this ▶',()=>{const c=pkCur();pickColor([c[0],c[1]])},{sz:12,pulse:true});
  const isFav=save.favs.some(f=>f[0]===cur[0]&&JSON.stringify(f[1])===JSON.stringify(cur[1]));
