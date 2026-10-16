@@ -307,12 +307,44 @@ const click=()=>tone(900,.05,'square',.05),ding=()=>{tone(1320,.25,'sine',.12);s
 const PRODUCTS={bundle_all:{name:'All Finishes Bundle',price:'$4.99',desc:'Every premium finish, incl. future ones.',fins:'*'},pack_camo:{name:'Camo Pack',price:'$1.99',desc:'All 9 camo patterns.',fins:Object.keys(CAMO)},pack_tiedye:{name:'Tie-Dye Pack',price:'$1.99',desc:'All 6 tie-dye styles.',fins:Object.keys(TIE)}};
 FINISHES.slice(1).forEach(f=>PRODUCTS['fin_'+f[0]]={name:f[1],price:'$0.99',desc:'Premium finish, yours forever.',fins:[f[0]]});
 const ownsFin=id=>id==='clear'||!!(save.fins&&save.fins[id])||Object.keys(save.iap).some(p=>save.iap[p]&&PRODUCTS[p]&&(PRODUCTS[p].fins==='*'||PRODUCTS[p].fins.includes(id)));
+const NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const AD_UNIT_REWARDED='ca-app-pub-3940256099942544/5224354917'; // Google TEST rewarded unit: swap for your real unit before production
+PRODUCTS.remove_ads={name:'Remove Ads',price:'$2.99',desc:'Boosts become instant, no ads.',fins:[]};
+function musicDuck(on){if(AC&&Music.g)Music.g.gain.setTargetAtTime(on?0:(save.music?.55:0),AC.currentTime,on?.1:.4)}
+const Native={adReady:false,adBusy:false,adCb:null,adEarned:false,store:null,
+ plug(n){return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins[n]},
+ async initAds(){const A=this.plug('AdMob');if(!A)return;try{
+   try{const ci=await A.requestConsentInfo();if(ci&&ci.isConsentFormAvailable&&ci.status==='REQUIRED')await A.showConsentForm()}catch(e){}
+   await A.initialize({initializeForTesting:true});
+   A.addListener('onRewardedVideoAdLoaded',()=>{this.adReady=true});
+   A.addListener('onRewardedVideoAdFailedToLoad',()=>{this.adReady=false;setTimeout(()=>this.loadAd(),30000)});
+   A.addListener('onRewardedVideoAdReward',()=>{this.adEarned=true});
+   A.addListener('onRewardedVideoAdFailedToShow',()=>this.adDone());
+   A.addListener('onRewardedVideoAdDismissed',()=>this.adDone());
+   this.loadAd()}catch(e){console.warn('admob',e)}},
+ loadAd(){const A=this.plug('AdMob');if(!A)return;this.adReady=false;A.prepareRewardVideoAd({adId:AD_UNIT_REWARDED,isTesting:true}).catch(()=>{})},
+ showAd(cb){const A=this.plug('AdMob');if(!A||!this.adReady){toast('No ad available right now. Try again soon.');return}
+   this.adBusy=true;this.adCb=cb;this.adEarned=false;setHiss(false);musicDuck(true);A.showRewardVideoAd().catch(()=>this.adDone())},
+ adDone(){if(!this.adBusy)return;this.adBusy=false;musicDuck(false);const cb=this.adCb;this.adCb=null;
+   if(this.adEarned&&cb){cb();ding()}else toast('Ad closed early: no boost');this.loadAd()},
+ initStore(){const C=window.CdvPurchase;if(!C)return;const st=C.store;this.store=st;
+   st.register(Object.keys(PRODUCTS).map(id=>({id,type:C.ProductType.NON_CONSUMABLE,platform:C.Platform.GOOGLE_PLAY})));
+   st.when().productUpdated(p=>{const o=p.getOffer&&p.getOffer(),ph=o&&o.pricingPhases&&o.pricingPhases[0];if(ph&&PRODUCTS[p.id])PRODUCTS[p.id].price=ph.price;if(st.owned(p.id))Monetize._grant(p.id,true)})
+     .approved(t=>t.verify()).verified(r=>r.finish())
+     .finished(t=>t.products.forEach(p=>Monetize._grant(p.id,false)));
+   st.error(e=>{if(e&&e.code!==C.ErrorCode.PAYMENT_CANCELLED)toast('Store: '+(e.message||'error'))});
+   st.initialize([C.Platform.GOOGLE_PLAY]).catch(e=>console.warn('billing',e))},
+ order(pid){const st=this.store,p=st&&st.get(pid),o=p&&p.getOffer();if(!o){toast('Store not ready. Check your connection.');return}
+   o.order().then(err=>{if(err&&err.code!==window.CdvPurchase.ErrorCode.PAYMENT_CANCELLED)toast('Purchase failed')})}};
 const Monetize={owns:pid=>!!save.iap[pid],
- buy(pid,cb){G.store={pid,cb}},            // real IAP: call native store here, then _complete(pid) on success
+ buy(pid,cb){G.store={pid,cb}},
+ _confirm(pid){if(NATIVE&&Native.store)Native.order(pid);else if(pid==='remove_ads')this.buyRemoveAds();else this._complete(pid)},
+ _grant(pid,silent){if(pid==='remove_ads'){if(save.noAds)return;save.noAds=true;persist();if(!silent)toast('Ads removed. Boosts are now instant.');return}
+   if(!PRODUCTS[pid]||save.iap[pid])return;save.iap[pid]=1;persist();if(silent)return;cash();buzz([20,40,20]);toast(PRODUCTS[pid].name+' unlocked!');const cb=G.store&&G.store.pid===pid&&G.store.cb;if(G.store&&G.store.pid===pid)G.store=null;cb&&cb()},
  _complete(pid){save.iap[pid]=1;persist();cash();buzz([20,40,20]);toast(PRODUCTS[pid].name+' unlocked! (mock purchase)');const cb=G.store&&G.store.cb;G.store=null;cb&&cb()},
- restore(){toast('Purchases restored')},
- adsRemoved:()=>!!save.noAds,showRewarded(cb){if(save.noAds){cb();toast('Boost applied (ad-free)');return}G.ad={t:0,cb};setHiss(false);if(Music.g)Music.g.gain.setTargetAtTime(0,AC.currentTime,.1)},
- buyRemoveAds(){save.noAds=true;persist();cash();toast('Ads removed. Boosts are now instant. (mock purchase)')}};
+ restore(){if(NATIVE&&Native.store){const before=JSON.stringify(save.iap)+save.noAds;Native.store.restorePurchases().then(()=>{Object.keys(PRODUCTS).forEach(id=>{if(Native.store.owned(id))this._grant(id,true)});toast(JSON.stringify(save.iap)+save.noAds!==before?'Purchases restored ✓':'No purchases to restore')}).catch(()=>toast('Restore failed. Check your connection.'))}else toast('Purchases restored (web: saved on this device)')},
+ adsRemoved:()=>!!save.noAds,showRewarded(cb){if(save.noAds){cb();toast('Boost applied (ad-free)');return}if(NATIVE){Native.showAd(cb);return}G.ad={t:0,cb};setHiss(false);if(Music.g)Music.g.gain.setTargetAtTime(0,AC.currentTime,.1)},
+ buyRemoveAds(){if(NATIVE&&Native.store){Native.order('remove_ads');return}save.noAds=true;persist();cash();toast('Ads removed. Boosts are now instant. (mock purchase)')}};
 function drawAd(dt){const a=G.ad;a.t+=dt;ctx.fillStyle='rgba(0,0,0,.92)';ctx.fillRect(0,0,W,H);const g=ctx.createLinearGradient(200,80,620,320);g.addColorStop(0,'#2a5bd7');g.addColorStop(1,'#7b2ad7');ctx.fillStyle=g;rr(210,80,400,220,16);ctx.fill();
  text('AD',230,104,12,'rgba(255,255,255,.7)','left',900);text('Your ad here',410,180,26,'#fff','center',900);text('(mock rewarded ad: real ads plug in later)',410,214,12,'rgba(255,255,255,.75)','center',500);
  const left=Math.max(0,3-a.t);ctx.fillStyle='rgba(255,255,255,.2)';rr(260,250,300,8,4);ctx.fill();ctx.fillStyle='#fff';rr(260,250,300*Math.min(1,a.t/3),8,4);ctx.fill();text(left>0?`Reward in ${Math.ceil(left)}…`:'Reward earned!',410,280,13,'#fff','center',700);
@@ -453,7 +485,7 @@ function drawGarage(dt){if(!GBG)GBG=genGarageBG();ctx.drawImage(GBG,0,0,W,H);
     else{ctx.drawImage(silhouette(i),cx-dw/2,by+bh-dh,dw,dh);text('?',cx,by+bh-dh/2,24,'rgba(255,255,255,.25)','center',900);ctx.fillStyle='rgba(20,14,8,.8)';rr(cx-56,sy+2,112,12,3);ctx.fill();text(JOBS[i].name.slice(0,22),cx,sy+8.5,8,'#a99','center',700)}})});
  if(save.sets.tools){ctx.save();const g=ctx.createLinearGradient(0,368,0,392);g.addColorStop(0,'#f6d77a');g.addColorStop(1,'#a4761a');ctx.fillStyle=g;rr(W/2-90,366,180,26,5);ctx.fill();ctx.restore();text('MASTER TOOL RESTORER',W/2,379,11,'#4a3208','center',900)}
  else text('Restore parts to fill the shelves. Complete a set for a bonus.',W/2,380,12,'rgba(255,230,200,.55)','center',500)}
-function drawShop(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H);text('TOOL SHOP',24,26,22,'#fff','left',900);text('Upgrades are bought with job earnings only.',170,27,13,'#aab','left',500);cashPill();button(224,360,170,30,'🛒 Finish Store',()=>{G.store={menu:true}},{col:['#6a4ad0','#3f2a90'],sz:12});if(!save.noAds)button(24,360,190,30,'Remove Ads · $2.99 (mock)',()=>Monetize.buyRemoveAds(),{col:['#6a4ad0','#3f2a90'],sz:12});else text('Ads removed ✓',30,375,12,'#9fdca9','left',700);
+function drawShop(){ctx.drawImage(BG,0,0,W,H);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H);text('TOOL SHOP',24,26,22,'#fff','left',900);text('Upgrades are bought with job earnings only.',170,27,13,'#aab','left',500);cashPill();button(404,360,150,30,'↺ Restore Purchases',()=>Monetize.restore(),{col:['#555c70','#33394a'],sz:12});button(224,360,170,30,'🛒 Finish Store',()=>{G.store={menu:true}},{col:['#6a4ad0','#3f2a90'],sz:12});if(!save.noAds)button(24,360,190,30,'Remove Ads · '+PRODUCTS.remove_ads.price+(NATIVE?'':' (mock)'),()=>Monetize.buyRemoveAds(),{col:['#6a4ad0','#3f2a90'],sz:12});else text('Ads removed ✓',30,375,12,'#9fdca9','left',700);
  button(W-262,10,100,30,'◀ Jobs',()=>{G.scr='map'},{col:['#4a5563','#2d343d'],sz:13});
  const U=[['nozzle','Wide-Bore Boron Nozzle',150,'+35% blast width. Cover more metal every pass.','#9aa'],['comp','185 CFM Tow-Behind Compressor',250,'+50% cutting speed and a deeper roar.','#c84']];
  U.forEach(([k,n,c,d],i)=>{const x=60+i*360,y=80,w=340,h=270;panel(x,y,w,h,.85);ctx.save();ctx.translate(x+w/2,y+95);
@@ -550,13 +582,13 @@ function drawPicker(){const x0=222,y0=190;panel(x0,y0,590,206,.95);text('PAINT',
   buttons.push({x,y,w:52,h:44,fn:()=>{click();if(own){pk.fin=f[0];pk.fav=null}else Monetize.buy('fin_'+f[0],()=>{pk.fin=f[0];pk.fav=null})}})});
  text(`${pk.pg+1}/${pages}`,x0+295,y0+196,9,'#889','center',700)}
 function drawStore(){const st=G.store;ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);
- if(st.menu){panel(170,40,480,320,.97);text('FINISH STORE',190,66,16,'#fff','left',900);text('Mock store: real in-app purchases plug in later',190,86,10,'#99a','left',500);
+ if(st.menu){panel(170,40,480,320,.97);text('FINISH STORE',190,66,16,'#fff','left',900);text(NATIVE?'One-time purchases · yours forever':'Mock store: real in-app purchases plug in later',190,86,10,'#99a','left',500);
   ['bundle_all','pack_camo','pack_tiedye'].forEach((pid,i)=>{const P=PRODUCTS[pid],y=104+i*74;panel(190,y,440,64,.9);const ids=P.fins==='*'?FINISHES.slice(1).map(f=>f[0]):P.fins;ids.slice(0,6).forEach((id,k)=>swatchOf(id,200+k*18,y+12,30,40));
    text(P.name,330,y+22,14,'#fff','left',800);text(P.desc,330,y+42,11,'#aab','left',500);const own=Monetize.owns(pid);button(530,y+16,88,32,own?'Owned ✓':P.price,()=>{G.store={pid,cb:()=>{G.store={menu:true}}}},{dis:own,col:['#2e9e4a','#1c6e31'],sz:14})});
   button(190,326,100,26,'Restore',()=>Monetize.restore(),{sz:11,col:['#4a5563','#2d343d']});button(530,326,100,26,'Close',()=>{G.store=null},{sz:12,col:['#4a5563','#2d343d']});return}
  const P=PRODUCTS[st.pid];panel(230,70,360,250,.97);text('CONFIRM PURCHASE',410,96,12,'#ff9a3a','center',900);
  const id=P.fins==='*'?'rainbow':P.fins[0];swatchOf(id,250,112,90,64);text(P.name,356,128,15,'#fff','left',800);text(P.desc,356,150,11,'#aab','left',500);text(P.price,356,170,18,'#7ee08a','left',900);
- button(250,196,320,38,`Buy for ${P.price}`,()=>Monetize._complete(st.pid),{col:['#2e9e4a','#1c6e31'],sz:15});
+ button(250,196,320,38,`Buy for ${P.price}`,()=>Monetize._confirm(st.pid),{col:['#2e9e4a','#1c6e31'],sz:15});
  if(st.pid.startsWith('fin_')){const f=st.pid.slice(4),pack=CAMO[f]?'pack_camo':TIE[f]?'pack_tiedye':null;if(pack&&!Monetize.owns(pack))button(250,242,155,30,`${PRODUCTS[pack].name} ${PRODUCTS[pack].price}`,()=>{G.store={pid:pack,cb:st.cb}},{sz:11,col:['#6a4ad0','#3f2a90']});
   if(!Monetize.owns('bundle_all'))button(pack?415:250,242,pack?155:320,30,`All Finishes ${PRODUCTS.bundle_all.price}`,()=>{G.store={pid:'bundle_all',cb:st.cb}},{sz:11,col:['#6a4ad0','#3f2a90']})}
  button(360,284,100,26,'Cancel',()=>{G.store=null},{sz:12,col:['#4a5563','#2d343d']})}
@@ -593,4 +625,12 @@ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;G.t+=dt;butt
  if(G.ad){buttons=[];drawAd(dt)}else if(G.store){buttons=[];drawStore()}drawToast(dt);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 window.__g={pk,FINISHES,ownsFin,get job(){return job},genSide,genPaint,compose,LEVELS,levelJob,Monetize,pointer,dailyJob,endlessJob,dayKey,G,get J(){return J},save,JOBS,startJob,chooseMedia,nextStage,pickColor,finishJob,coverage,applyTool,get buttons(){return buttons},PX,PY,PW,PH};
+
+(function(){function bg(){setHiss(false);if(AC&&AC.state==='running')AC.suspend()}function fg(){if(AC&&AC.state==='suspended'&&!Native.adBusy)AC.resume()}
+document.addEventListener('visibilitychange',()=>document.hidden?bg():fg());
+if(NATIVE){const App=Native.plug('App');if(App){App.addListener('pause',bg);App.addListener('resume',fg);
+ App.addListener('backButton',()=>{if(Native.adBusy||G.ad)return;if(G.store){G.store=null;return}const s=G.scr;
+  if(s==='title'){App.exitApp();return}if(s==='work'||s==='media'||s==='brief'||s==='results'){setHiss(false);G.scr='map';return}G.scr='title'})}
+ const SS=Native.plug('SplashScreen');setTimeout(()=>SS&&SS.hide().catch(()=>{}),300);
+ Native.initAds();if(window.CdvPurchase)Native.initStore();else document.addEventListener('deviceready',()=>Native.initStore(),false)}})();
 </script></body></html>
